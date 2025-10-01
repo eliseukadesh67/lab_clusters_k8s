@@ -5,7 +5,7 @@
 require 'google/protobuf'
 
 
-descriptor_data = "\n\x0eplaylist.proto\x12\x08playlist\"%\n\x15\x43reatePlaylistRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\")\n\x12GetPlaylistRequest\x12\x13\n\x0bplaylist_id\x18\x01 \x01(\t\"\x16\n\x14ListPlaylistsRequest\"?\n\x10PlaylistResponse\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x11\n\tqtd_video\x18\x03 \x01(\x05\"F\n\x15ListPlaylistsResponse\x12-\n\tplaylists\x18\x01 \x03(\x0b\x32\x1a.playlist.PlaylistResponse\"A\n\x05Video\x12\n\n\x02id\x18\x01 \x01(\t\x12\r\n\x05title\x18\x02 \x01(\t\x12\x0b\n\x03url\x18\x03 \x01(\t\x12\x10\n\x08\x64uration\x18\x04 \x01(\x05\x32\xfb\x01\n\x0fPlaylistService\x12M\n\x0e\x43reatePlaylist\x12\x1f.playlist.CreatePlaylistRequest\x1a\x1a.playlist.PlaylistResponse\x12G\n\x0bGetPlaylist\x12\x1c.playlist.GetPlaylistRequest\x1a\x1a.playlist.PlaylistResponse\x12P\n\rListPlaylists\x12\x1e.playlist.ListPlaylistsRequest\x1a\x1f.playlist.ListPlaylistsResponseb\x06proto3"
+descriptor_data = "\n\x0eplaylist.proto\x12\x08playlist\"%\n\x15\x43reatePlaylistRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\")\n\x12GetPlaylistRequest\x12\x13\n\x0bplaylist_id\x18\x01 \x01(\t\"\x16\n\x14ListPlaylistsRequest\"8\n\x13\x45\x64itPlaylistRequest\x12\x13\n\x0bplaylist_id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\",\n\x15\x44\x65letePlaylistRequest\x12\x13\n\x0bplaylist_id\x18\x01 \x01(\t\"?\n\x10PlaylistResponse\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x11\n\tqtd_video\x18\x03 \x01(\x05\"F\n\x15ListPlaylistsResponse\x12-\n\tplaylists\x18\x01 \x03(\x0b\x32\x1a.playlist.PlaylistResponse2\x9a\x03\n\x0fPlaylistService\x12M\n\x0e\x43reatePlaylist\x12\x1f.playlist.CreatePlaylistRequest\x1a\x1a.playlist.PlaylistResponse\x12G\n\x0bGetPlaylist\x12\x1c.playlist.GetPlaylistRequest\x1a\x1a.playlist.PlaylistResponse\x12P\n\rListPlaylists\x12\x1e.playlist.ListPlaylistsRequest\x1a\x1f.playlist.ListPlaylistsResponse\x12I\n\x0c\x45\x64itPlaylist\x12\x1d.playlist.EditPlaylistRequest\x1a\x1a.playlist.PlaylistResponse\x12R\n\x0e\x44\x65letePlaylist\x12\x1f.playlist.DeletePlaylistRequest\x1a\x1f.playlist.ListPlaylistsResponseb\x06proto3"
 
 pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
@@ -14,7 +14,8 @@ module Playlist
   CreatePlaylistRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.CreatePlaylistRequest").msgclass
   GetPlaylistRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.GetPlaylistRequest").msgclass
   ListPlaylistsRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.ListPlaylistsRequest").msgclass
+  EditPlaylistRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.EditPlaylistRequest").msgclass
+  DeletePlaylistRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.DeletePlaylistRequest").msgclass
   PlaylistResponse = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.PlaylistResponse").msgclass
   ListPlaylistsResponse = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.ListPlaylistsResponse").msgclass
-  Video = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.Video").msgclass
 end

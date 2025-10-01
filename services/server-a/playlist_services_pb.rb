@@ -17,6 +17,8 @@ module Playlist
       rpc :CreatePlaylist, ::Playlist::CreatePlaylistRequest, ::Playlist::PlaylistResponse
       rpc :GetPlaylist, ::Playlist::GetPlaylistRequest, ::Playlist::PlaylistResponse
       rpc :ListPlaylists, ::Playlist::ListPlaylistsRequest, ::Playlist::ListPlaylistsResponse
+      rpc :EditPlaylist, ::Playlist::EditPlaylistRequest, ::Playlist::PlaylistResponse
+      rpc :DeletePlaylist, ::Playlist::DeletePlaylistRequest, ::Playlist::ListPlaylistsResponse
     end
 
     Stub = Service.rpc_stub_class

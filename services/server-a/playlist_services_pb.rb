@@ -14,11 +14,17 @@ module Playlist
       self.unmarshal_class_method = :decode
       self.service_name = 'playlist.PlaylistService'
 
+      # Playlist
       rpc :CreatePlaylist, ::Playlist::CreatePlaylistRequest, ::Playlist::PlaylistResponse
       rpc :GetPlaylist, ::Playlist::GetPlaylistRequest, ::Playlist::PlaylistResponse
       rpc :ListPlaylists, ::Playlist::ListPlaylistsRequest, ::Playlist::ListPlaylistsResponse
       rpc :EditPlaylist, ::Playlist::EditPlaylistRequest, ::Playlist::PlaylistResponse
       rpc :DeletePlaylist, ::Playlist::DeletePlaylistRequest, ::Playlist::ListPlaylistsResponse
+      # Video
+      rpc :AddVideo, ::Playlist::AddVideoRequest, ::Playlist::VideoResponse
+      rpc :GetVideo, ::Playlist::GetVideoRequest, ::Playlist::VideoResponse
+      rpc :ListVideos, ::Playlist::ListVideoRequest, ::Playlist::ListVideosResponse
+      rpc :DeleteVideo, ::Playlist::DeleteVideoRequest, ::Playlist::ListVideosResponse
     end
 
     Stub = Service.rpc_stub_class

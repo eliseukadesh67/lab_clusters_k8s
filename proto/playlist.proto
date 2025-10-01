@@ -4,16 +4,29 @@ package playlist;
 
 service PlaylistService {
     rpc CreatePlaylist(CreatePlaylistRequest) returns (PlaylistResponse);
+    rpc GetPlaylist(GetPlaylistRequest) returns (PlaylistResponse);
+    rpc ListPlaylists(ListPlaylistsRequest) returns (ListPlaylistsResponse);
 }
 
 message CreatePlaylistRequest {
     string name = 1;
 }
 
+
+message GetPlaylistRequest {
+  string playlist_id = 1;
+}
+
+message ListPlaylistsRequest {}
+
 message PlaylistResponse {
     string id = 1;
     string name = 2;
-    repeated Video videos = 3;
+    int32 qtd_video = 3;
+}
+
+message ListPlaylistsResponse {
+    repeated PlaylistResponse playlists = 1;
 }
 
 message Video {

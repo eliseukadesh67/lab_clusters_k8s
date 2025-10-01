@@ -15,6 +15,8 @@ module Playlist
       self.service_name = 'playlist.PlaylistService'
 
       rpc :CreatePlaylist, ::Playlist::CreatePlaylistRequest, ::Playlist::PlaylistResponse
+      rpc :GetPlaylist, ::Playlist::GetPlaylistRequest, ::Playlist::PlaylistResponse
+      rpc :ListPlaylists, ::Playlist::ListPlaylistsRequest, ::Playlist::ListPlaylistsResponse
     end
 
     Stub = Service.rpc_stub_class

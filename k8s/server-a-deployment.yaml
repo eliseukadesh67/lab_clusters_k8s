@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server-a-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: server-a
+  template:
+    metadata:
+      labels:
+        app: server-a
+    spec:
+      containers:
+      - name: server-a
+        image: grpc-server:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 50051

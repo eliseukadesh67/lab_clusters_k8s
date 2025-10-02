@@ -1,16 +1,14 @@
+# RUBY
 vendor/
 .bundle/
 
-# Logs
 *.log
 
-# Temporary files
 tmp/
 *.tmp
 *.swp
 *.swo
 
-# OS generated files
 .DS_Store
 .DS_Store?
 ._*
@@ -18,3 +16,9 @@ tmp/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# PYTHON
+venv/
+__pycache__/
+downloads/
+*.exe

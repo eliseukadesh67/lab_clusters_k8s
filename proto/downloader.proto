@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package downloader;
+
+service DownloaderService {
+  rpc DownloadVideo(DownloadRequest) returns (stream DownloadStatusResponse);
+}
+
+message DownloadRequest {
+  string video_url = 1;
+}
+
+message DownloadStatusResponse {
+  oneof status {
+    float progress_percentage = 1; // Para o progresso de 0 a 100
+    string final_message = 2;      // Para a mensagem final de sucesso
+    string error_message = 3;      // Para a mensagem final de erro
+  }
+}

@@ -1,0 +1,70 @@
+import grpc
+import os
+import yt_dlp
+from concurrent import futures
+import threading
+import queue
+import downloader_pb2
+import downloader_pb2_grpc
+
+class DownloaderService(downloader_pb2_grpc.DownloaderServiceServicer):
+
+    def DownloadVideo(self, request, context):
+        progress_queue = queue.Queue()
+
+        def progress_hook(d):
+            if d['status'] == 'downloading':
+                try:
+                    total_bytes = d.get('total_bytes') or d.get('total_bytes_estimate')
+                    if total_bytes:
+                        downloaded_bytes = d.get('downloaded_bytes', 0)
+                        percentage = (downloaded_bytes / total_bytes) * 100
+                        progress_queue.put(downloader_pb2.DownloadStatusResponse(progress_percentage=percentage))
+                except (TypeError, ZeroDivisionError):
+                    pass
+
+        ydl_opts = {
+            'outtmpl': os.path.join("downloads", '%(title)s.%(ext)s'),
+            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best/bestvideo+bestaudio',
+            'merge_output_format': 'mp4',
+            'progress_hooks': [progress_hook],
+            'ignoreerrors': False,
+            'quiet': True,
+            'no_warnings': True,
+        }
+        
+        def download_thread_target():
+            try:
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    ydl.download([request.video_url])
+                final_msg = f"Download de '{request.video_url}' concluído com sucesso."
+                progress_queue.put(downloader_pb2.DownloadStatusResponse(final_message=final_msg))
+            except Exception as e:
+                error_msg = f"Erro ao baixar '{request.video_url}': {e}"
+                progress_queue.put(downloader_pb2.DownloadStatusResponse(error_message=error_msg))
+            finally:
+                progress_queue.put(None)
+
+        thread = threading.Thread(target=download_thread_target)
+        thread.start()
+
+        while True:
+            item = progress_queue.get()
+            if item is None:
+                break
+            yield item
+
+def serve():
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    downloader_pb2_grpc.add_DownloaderServiceServicer_to_server(DownloaderService(), server)
+    port = '50052'
+    server.add_insecure_port(f'[::]:{port}')
+    server.start()
+    
+    try:
+        server.wait_for_termination()
+    except KeyboardInterrupt:
+        server.stop(0)
+
+if __name__ == '__main__':
+    serve()

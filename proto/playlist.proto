@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package playlist;
+
+service PlaylistService {
+    // Playlist
+    rpc CreatePlaylist(CreatePlaylistRequest) returns (PlaylistResponse);
+    rpc GetPlaylist(GetPlaylistRequest) returns (PlaylistResponse);
+    rpc ListPlaylists(ListPlaylistsRequest) returns (ListPlaylistsResponse);
+    rpc EditPlaylist(EditPlaylistRequest) returns (PlaylistResponse);
+    rpc DeletePlaylist(DeletePlaylistRequest) returns (ListPlaylistsResponse);
+    
+    // Video
+    rpc AddVideo(AddVideoRequest) returns (VideoResponse);
+    rpc GetVideo(GetVideoRequest) returns (VideoResponse);
+    rpc ListVideos(ListVideoRequest) returns (ListVideosResponse);
+    rpc DeleteVideo(DeleteVideoRequest) returns (ListVideosResponse);
+}
+
+message CreatePlaylistRequest { string name = 1; }
+message GetPlaylistRequest { string playlist_id = 1; }
+message ListPlaylistsRequest {}
+message EditPlaylistRequest { string playlist_id = 1; string name = 2; }
+message DeletePlaylistRequest { string playlist_id = 1; }
+
+message AddVideoRequest { string playlist_id = 1; string url = 2; }
+message ListVideoRequest { string playlist_id = 1; }
+message DeleteVideoRequest { string playlist_id = 1; string video_id = 2; }
+message GetVideoRequest { string playlist_id = 1; string video_id = 2; }
+
+message PlaylistResponse { string playlist_id = 1; string name = 2; int32 qtd_video = 3; }
+message ListPlaylistsResponse { repeated PlaylistResponse playlists = 1; }
+
+message VideoResponse { string playlist_id = 1; string video_id = 2; string url = 3; }
+message ListVideosResponse { string playlist_id = 1; repeated VideoResponse videos = 2; }

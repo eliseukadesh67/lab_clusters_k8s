@@ -9,6 +9,32 @@ import downloader_pb2_grpc
 
 class DownloaderService(downloader_pb2_grpc.DownloaderServiceServicer):
 
+    def GetVideoMetadata(self, request, context):
+        """
+        Extrai metadados de um vídeo sem baixá-lo.
+        """
+        ydl_opts = {
+            'quiet': True,
+            'no_warnings': True,
+        }
+        
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info_dict = ydl.extract_info(request.video_url, download=False)
+            title = info_dict.get('title', 'N/A')
+            duration = int(info_dict.get('duration', 0))
+            thumbnail_url = info_dict.get('thumbnail', '')
+            
+            return downloader_pb2.VideoMetadataResponse(
+                title=title,
+                duration=duration,
+                thumbnail_url=thumbnail_url
+            )
+        except Exception as e:
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            context.set_details(f"Não foi possível extrair metadados: {e}")
+            return downloader_pb2.VideoMetadataResponse()
+    
     def DownloadVideo(self, request, context):
         progress_queue = queue.Queue()
 

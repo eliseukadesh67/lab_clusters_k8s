@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10\x64ownloader.proto\x12\ndownloader\"$\n\x0f\x44ownloadRequest\x12\x11\n\tvideo_url\x18\x01 \x01(\t\"s\n\x16\x44ownloadStatusResponse\x12\x1d\n\x13progress_percentage\x18\x01 \x01(\x02H\x00\x12\x17\n\rfinal_message\x18\x02 \x01(\tH\x00\x12\x17\n\rerror_message\x18\x03 \x01(\tH\x00\x42\x08\n\x06status2g\n\x11\x44ownloaderService\x12R\n\rDownloadVideo\x12\x1b.downloader.DownloadRequest\x1a\".downloader.DownloadStatusResponse0\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10\x64ownloader.proto\x12\ndownloader\"$\n\x0f\x44ownloadRequest\x12\x11\n\tvideo_url\x18\x01 \x01(\t\"s\n\x16\x44ownloadStatusResponse\x12\x1d\n\x13progress_percentage\x18\x01 \x01(\x02H\x00\x12\x17\n\rfinal_message\x18\x02 \x01(\tH\x00\x12\x17\n\rerror_message\x18\x03 \x01(\tH\x00\x42\x08\n\x06status\"O\n\x15VideoMetadataResponse\x12\r\n\x05title\x18\x01 \x01(\t\x12\x10\n\x08\x64uration\x18\x02 \x01(\x05\x12\x15\n\rthumbnail_url\x18\x03 \x01(\t2\xbb\x01\n\x11\x44ownloaderService\x12R\n\x10GetVideoMetadata\x12\x1b.downloader.DownloadRequest\x1a!.downloader.VideoMetadataResponse\x12R\n\rDownloadVideo\x12\x1b.downloader.DownloadRequest\x1a\".downloader.DownloadStatusResponse0\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -35,6 +35,8 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_DOWNLOADREQUEST']._serialized_end=68
   _globals['_DOWNLOADSTATUSRESPONSE']._serialized_start=70
   _globals['_DOWNLOADSTATUSRESPONSE']._serialized_end=185
-  _globals['_DOWNLOADERSERVICE']._serialized_start=187
-  _globals['_DOWNLOADERSERVICE']._serialized_end=290
+  _globals['_VIDEOMETADATARESPONSE']._serialized_start=187
+  _globals['_VIDEOMETADATARESPONSE']._serialized_end=266
+  _globals['_DOWNLOADERSERVICE']._serialized_start=269
+  _globals['_DOWNLOADERSERVICE']._serialized_end=456
 # @@protoc_insertion_point(module_scope)

@@ -3,6 +3,7 @@ syntax = "proto3";
 package downloader;
 
 service DownloaderService {
+  rpc GetVideoMetadata(DownloadRequest) returns (VideoMetadataResponse);
   rpc DownloadVideo(DownloadRequest) returns (stream DownloadStatusResponse);
 }
 
@@ -16,4 +17,10 @@ message DownloadStatusResponse {
     string final_message = 2;      // Para a mensagem final de sucesso
     string error_message = 3;      // Para a mensagem final de erro
   }
+}
+
+message VideoMetadataResponse {
+  string title = 1;
+  int32 duration = 2;       
+  string thumbnail_url = 3;
 }

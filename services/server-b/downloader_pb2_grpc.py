@@ -34,6 +34,11 @@ class DownloaderServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.GetVideoMetadata = channel.unary_unary(
+                '/downloader.DownloaderService/GetVideoMetadata',
+                request_serializer=downloader__pb2.DownloadRequest.SerializeToString,
+                response_deserializer=downloader__pb2.VideoMetadataResponse.FromString,
+                _registered_method=True)
         self.DownloadVideo = channel.unary_stream(
                 '/downloader.DownloaderService/DownloadVideo',
                 request_serializer=downloader__pb2.DownloadRequest.SerializeToString,
@@ -44,9 +49,14 @@ class DownloaderServiceStub(object):
 class DownloaderServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
+    def GetVideoMetadata(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def DownloadVideo(self, request, context):
-        """Envia uma URL de vídeo e recebe um fluxo de status do download
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -54,6 +64,11 @@ class DownloaderServiceServicer(object):
 
 def add_DownloaderServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'GetVideoMetadata': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetVideoMetadata,
+                    request_deserializer=downloader__pb2.DownloadRequest.FromString,
+                    response_serializer=downloader__pb2.VideoMetadataResponse.SerializeToString,
+            ),
             'DownloadVideo': grpc.unary_stream_rpc_method_handler(
                     servicer.DownloadVideo,
                     request_deserializer=downloader__pb2.DownloadRequest.FromString,
@@ -69,6 +84,33 @@ def add_DownloaderServiceServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class DownloaderService(object):
     """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def GetVideoMetadata(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/downloader.DownloaderService/GetVideoMetadata',
+            downloader__pb2.DownloadRequest.SerializeToString,
+            downloader__pb2.VideoMetadataResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
 
     @staticmethod
     def DownloadVideo(request,

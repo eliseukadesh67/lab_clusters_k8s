@@ -4,10 +4,10 @@ import yt_dlp
 from concurrent import futures
 import threading
 import queue
-import downloader_pb2
-import downloader_pb2_grpc
+import download_pb2
+import download_pb2_grpc
 
-class DownloaderService(downloader_pb2_grpc.DownloaderServiceServicer):
+class DownloadService(download_pb2_grpc.DownloadServiceServicer):
 
     def GetVideoMetadata(self, request, context):
         """
@@ -25,7 +25,7 @@ class DownloaderService(downloader_pb2_grpc.DownloaderServiceServicer):
             duration = int(info_dict.get('duration', 0))
             thumbnail_url = info_dict.get('thumbnail', '')
             
-            return downloader_pb2.VideoMetadataResponse(
+            return download_pb2.VideoMetadataResponse(
                 title=title,
                 duration=duration,
                 thumbnail_url=thumbnail_url
@@ -33,7 +33,7 @@ class DownloaderService(downloader_pb2_grpc.DownloaderServiceServicer):
         except Exception as e:
             context.set_code(grpc.StatusCode.NOT_FOUND)
             context.set_details(f"Não foi possível extrair metadados: {e}")
-            return downloader_pb2.VideoMetadataResponse()
+            return download_pb2.VideoMetadataResponse()
     
     def DownloadVideo(self, request, context):
         progress_queue = queue.Queue()
@@ -45,7 +45,7 @@ class DownloaderService(downloader_pb2_grpc.DownloaderServiceServicer):
                     if total_bytes:
                         downloaded_bytes = d.get('downloaded_bytes', 0)
                         percentage = (downloaded_bytes / total_bytes) * 100
-                        progress_queue.put(downloader_pb2.DownloadStatusResponse(progress_percentage=percentage))
+                        progress_queue.put(download_pb2.DownloadStatusResponse(progress_percentage=percentage))
                 except (TypeError, ZeroDivisionError):
                     pass
 
@@ -64,10 +64,10 @@ class DownloaderService(downloader_pb2_grpc.DownloaderServiceServicer):
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     ydl.download([request.video_url])
                 final_msg = f"Download de '{request.video_url}' concluído com sucesso."
-                progress_queue.put(downloader_pb2.DownloadStatusResponse(final_message=final_msg))
+                progress_queue.put(download_pb2.DownloadStatusResponse(final_message=final_msg))
             except Exception as e:
                 error_msg = f"Erro ao baixar '{request.video_url}': {e}"
-                progress_queue.put(downloader_pb2.DownloadStatusResponse(error_message=error_msg))
+                progress_queue.put(download_pb2.DownloadStatusResponse(error_message=error_msg))
             finally:
                 progress_queue.put(None)
 
@@ -82,7 +82,7 @@ class DownloaderService(downloader_pb2_grpc.DownloaderServiceServicer):
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    downloader_pb2_grpc.add_DownloaderServiceServicer_to_server(DownloaderService(), server)
+    download_pb2_grpc.add_DownloadServiceServicer_to_server(DownloadService(), server)
     port = '50052'
     server.add_insecure_port(f'[::]:{port}')
     server.start()

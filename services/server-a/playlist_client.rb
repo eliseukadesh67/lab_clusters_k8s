@@ -1,6 +1,8 @@
 require 'grpc'
 require_relative 'playlist_pb'
 require_relative 'playlist_services_pb'
+require_relative 'download_pb'
+require_relative 'download_services_pb'
 
 def print_usage
   puts "Uso: client.rb <comando> [argumentos...]"
@@ -25,7 +27,13 @@ def print_playlist(response)
 end
 
 def print_video(response)
-  puts "  - ID Vídeo: #{response.video_id} - URL: #{response.url}"
+  puts "--------------------------"
+  puts "  - ID Vídeo: #{response.video_id}"
+  puts "  - Título: #{response.title}"
+  puts "  - Duração: #{format_duration(response.duration)}"
+  puts "  - URL: #{response.url}"
+  puts "  - Capa: #{response.thumbnail_url}"
+  puts "--------------------------"
 end
 
 def print_videos_to_playlist(response)
@@ -33,6 +41,16 @@ def print_videos_to_playlist(response)
   response.videos.each do |video|
     print_video(video)
   end
+end
+
+def format_duration(total_seconds)
+  return "00h00m00s" unless total_seconds.is_a?(Numeric) && total_seconds > 0
+  
+  hours = total_seconds / 3600
+  minutes = (total_seconds / 60) % 60
+  seconds = total_seconds % 60
+  
+  format("%02dh%02dm%02ds", hours, minutes, seconds)
 end
 
 def main

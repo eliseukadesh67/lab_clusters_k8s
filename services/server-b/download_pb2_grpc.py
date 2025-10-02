@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import downloader_pb2 as downloader__pb2
+import download_pb2 as download__pb2
 
 GRPC_GENERATED_VERSION = '1.75.1'
 GRPC_VERSION = grpc.__version__
@@ -18,14 +18,14 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in downloader_pb2_grpc.py depends on'
+        + f' but the generated code in download_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
     )
 
 
-class DownloaderServiceStub(object):
+class DownloadServiceStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -35,18 +35,18 @@ class DownloaderServiceStub(object):
             channel: A grpc.Channel.
         """
         self.GetVideoMetadata = channel.unary_unary(
-                '/downloader.DownloaderService/GetVideoMetadata',
-                request_serializer=downloader__pb2.DownloadRequest.SerializeToString,
-                response_deserializer=downloader__pb2.VideoMetadataResponse.FromString,
+                '/download.DownloadService/GetVideoMetadata',
+                request_serializer=download__pb2.DownloadRequest.SerializeToString,
+                response_deserializer=download__pb2.VideoMetadataResponse.FromString,
                 _registered_method=True)
         self.DownloadVideo = channel.unary_stream(
-                '/downloader.DownloaderService/DownloadVideo',
-                request_serializer=downloader__pb2.DownloadRequest.SerializeToString,
-                response_deserializer=downloader__pb2.DownloadStatusResponse.FromString,
+                '/download.DownloadService/DownloadVideo',
+                request_serializer=download__pb2.DownloadRequest.SerializeToString,
+                response_deserializer=download__pb2.DownloadStatusResponse.FromString,
                 _registered_method=True)
 
 
-class DownloaderServiceServicer(object):
+class DownloadServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def GetVideoMetadata(self, request, context):
@@ -62,27 +62,27 @@ class DownloaderServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_DownloaderServiceServicer_to_server(servicer, server):
+def add_DownloadServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'GetVideoMetadata': grpc.unary_unary_rpc_method_handler(
                     servicer.GetVideoMetadata,
-                    request_deserializer=downloader__pb2.DownloadRequest.FromString,
-                    response_serializer=downloader__pb2.VideoMetadataResponse.SerializeToString,
+                    request_deserializer=download__pb2.DownloadRequest.FromString,
+                    response_serializer=download__pb2.VideoMetadataResponse.SerializeToString,
             ),
             'DownloadVideo': grpc.unary_stream_rpc_method_handler(
                     servicer.DownloadVideo,
-                    request_deserializer=downloader__pb2.DownloadRequest.FromString,
-                    response_serializer=downloader__pb2.DownloadStatusResponse.SerializeToString,
+                    request_deserializer=download__pb2.DownloadRequest.FromString,
+                    response_serializer=download__pb2.DownloadStatusResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'downloader.DownloaderService', rpc_method_handlers)
+            'download.DownloadService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('downloader.DownloaderService', rpc_method_handlers)
+    server.add_registered_method_handlers('download.DownloadService', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
-class DownloaderService(object):
+class DownloadService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -99,9 +99,9 @@ class DownloaderService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/downloader.DownloaderService/GetVideoMetadata',
-            downloader__pb2.DownloadRequest.SerializeToString,
-            downloader__pb2.VideoMetadataResponse.FromString,
+            '/download.DownloadService/GetVideoMetadata',
+            download__pb2.DownloadRequest.SerializeToString,
+            download__pb2.VideoMetadataResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -126,9 +126,9 @@ class DownloaderService(object):
         return grpc.experimental.unary_stream(
             request,
             target,
-            '/downloader.DownloaderService/DownloadVideo',
-            downloader__pb2.DownloadRequest.SerializeToString,
-            downloader__pb2.DownloadStatusResponse.FromString,
+            '/download.DownloadService/DownloadVideo',
+            download__pb2.DownloadRequest.SerializeToString,
+            download__pb2.DownloadStatusResponse.FromString,
             options,
             channel_credentials,
             insecure,

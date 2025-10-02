@@ -31,5 +31,11 @@ message GetVideoRequest { string playlist_id = 1; string video_id = 2; }
 message PlaylistResponse { string playlist_id = 1; string name = 2; int32 qtd_video = 3; }
 message ListPlaylistsResponse { repeated PlaylistResponse playlists = 1; }
 
-message VideoResponse { string playlist_id = 1; string video_id = 2; string url = 3; }
+message VideoResponse { 
+    string playlist_id = 1;
+    string video_id = 2;
+    string url = 3;
+    string title = 4;
+    int32 duration = 5;
+    string thumbnail_url = 6;}
 message ListVideosResponse { string playlist_id = 1; repeated VideoResponse videos = 2; }

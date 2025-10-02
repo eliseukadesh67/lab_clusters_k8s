@@ -2,6 +2,10 @@ require 'grpc'
 require 'securerandom'
 require_relative 'playlist_pb'
 require_relative 'playlist_services_pb'
+require_relative 'download_pb'
+require_relative 'download_services_pb'
+
+DOWNLOAD_SERVER_ADDR = 'localhost:50052'
 
 class PlaylistServer < Playlist::PlaylistService::Service
   
@@ -47,25 +51,63 @@ class PlaylistServer < Playlist::PlaylistService::Service
 
   # --- VIDEO ---
 
+  def download_stub
+    @download_stub ||= Download::DownloadService::Stub.new(DOWNLOAD_SERVER_ADDR, :this_channel_is_insecure)
+  end
+
   def add_video(request, _call)
     playlist = find_playlist!(request.playlist_id)
     if playlist[:videos].any? { |v| v[:url] == request.url }
       raise GRPC::AlreadyExists.new("Vídeo com URL '#{request.url}' já existe na playlist.")
     end
-    video = { id: SecureRandom.uuid, url: request.url }
+    begin
+      metadata_request = Download::DownloadRequest.new(video_url: request.url)
+      metadata_response = download_stub.get_video_metadata(metadata_request)
+    rescue GRPC::BadStatus => e
+      raise GRPC::InvalidArgument.new("Erro ao obter metadados do vídeo: #{e.message}")
+    end
+
+    video = {
+      id: SecureRandom.uuid,
+      url: request.url,
+      title: metadata_response.title,
+      duration: metadata_response.duration,
+      thumbnail_url: metadata_response.thumbnail_url
+    }
     playlist[:videos] << video
-    Playlist::VideoResponse.new(playlist_id: playlist[:id], video_id: video[:id], url: video[:url])
+    Playlist::VideoResponse.new(
+      playlist_id: playlist[:id],
+      video_id: video[:id],
+      url: video[:url],
+      title: video[:title],
+      duration: video[:duration],
+      thumbnail_url: video[:thumbnail_url]
+    )
   end
 
   def get_video(request, _call)
     playlist = find_playlist!(request.playlist_id)
     video = find_video!(playlist, request.video_id)
-    Playlist::VideoResponse.new(playlist_id: playlist[:id], video_id: video[:id], url: video[:url])
+    Playlist::VideoResponse.new(
+      playlist_id: playlist[:id],
+      video_id: video[:id],
+      url: video[:url],
+      title: video[:title],
+      duration: video[:duration],
+      thumbnail_url: video[:thumbnail_url]
+    )
   end
   
   def list_videos(request, _call)
     playlist = find_playlist!(request.playlist_id)
-    videos = playlist[:videos].map { |v| Playlist::VideoResponse.new(playlist_id: playlist[:id], video_id: v[:id], url: v[:url]) }
+    videos = playlist[:videos].map { |v| Playlist::VideoResponse.new(
+      playlist_id: playlist[:id],
+      video_id: v[:id],
+      url: v[:url],
+      title: v[:title],
+      duration: v[:duration],
+      thumbnail_url: v[:thumbnail_url]
+    ) }
     Playlist::ListVideosResponse.new(playlist_id: playlist[:id], videos: videos)
   end
 

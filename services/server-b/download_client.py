@@ -1,14 +1,14 @@
 import grpc
 import sys
 from tqdm import tqdm
-import downloader_pb2
-import downloader_pb2_grpc
+import download_pb2
+import download_pb2_grpc
 
 def run_client(command: str, video_url: str):
     server_address = 'localhost:50052'
     
     with grpc.insecure_channel(server_address) as channel:
-        stub = downloader_pb2_grpc.DownloaderServiceStub(channel)
+        stub = download_pb2_grpc.DownloadServiceStub(channel)
         
         if command == "download":
             run_download(stub, video_url)
@@ -20,7 +20,7 @@ def run_client(command: str, video_url: str):
 
 def run_download(stub, video_url):
     try:
-        request = downloader_pb2.DownloadRequest(video_url=video_url)
+        request = download_pb2.DownloadRequest(video_url=video_url)
         response_stream = stub.DownloadVideo(request)
         
         with tqdm(total=100, desc="Progresso", unit="%", bar_format="{l_bar}{bar}| {n:.1f}/{total:.0f}%") as pbar:
@@ -43,7 +43,7 @@ def run_download(stub, video_url):
 
 def run_get_metadata(stub, video_url):
     try:
-        request = downloader_pb2.DownloadRequest(video_url=video_url)
+        request = download_pb2.DownloadRequest(video_url=video_url)
         response = stub.GetVideoMetadata(request)
         duration_in_seconds = response.duration
         minutes, seconds = divmod(duration_in_seconds, 60)
@@ -64,7 +64,7 @@ def run_get_metadata(stub, video_url):
         print(f"\n--> Falha ao buscar metadados: {e.details()}")
 
 def print_usage():
-    print("Uso: python downloader_client.py <comando> <url_do_video>")
+    print("Uso: python download_client.py <comando> <url_do_video>")
     print("Comandos:")
     print("  download   - Baixa o vídeo com barra de progresso.")
     print("  metadata   - Extrai os metadados (título, duração, capa) do vídeo.")

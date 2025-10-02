@@ -1,4 +1,4 @@
-# Serviço B - Downloader gRPC Server
+# Serviço B - Download gRPC Server
 
 Este é um servidor gRPC em Python que gerencia o download de vídeos do YouTube com rastreamento de progresso em tempo real.
 
@@ -48,7 +48,7 @@ python -m grpc_tools.protoc -I ../../proto --python_out=. --grpc_python_out=. ..
 
 ### Servidor
 ```bash
-python downloader_server.py
+python download_server.py
 ```
 O servidor será iniciado na porta `50052`.
 
@@ -56,7 +56,7 @@ O servidor será iniciado na porta `50052`.
 
 #### Obter metadados de um vídeo
 ```bash
-python downloader_client.py metadata "https://www.youtube.com/watch?v=njC24ts24Pg"
+python download_client.py metadata "https://www.youtube.com/watch?v=njC24ts24Pg"
 ```
 
 **Saída esperada:**
@@ -70,7 +70,7 @@ URL da Capa: https://i.ytimg.com/vi_webp/njC24ts24Pg/maxresdefault.webp
 
 #### Baixar vídeo com progresso
 ```bash
-python downloader_client.py download "https://www.youtube.com/watch?v=gnchfOojMk4&t=5s"
+python download_client.py download "https://www.youtube.com/watch?v=gnchfOojMk4&t=5s"
 ```
 
 **Saída esperada:**
@@ -88,20 +88,20 @@ server-b/
 ├── venv/                      # Ambiente virtual Python
 ├── downloads/                 # Diretório onde os vídeos são salvos
 ├── requirements.txt           # Dependências Python
-├── downloader_server.py       # Implementação do servidor gRPC
-├── downloader_client.py       # Cliente para testes
-├── downloader_pb2.py          # Arquivos gerados do protobuf
-├── downloader_pb2_grpc.py     # Serviços gRPC gerados
+├── download_server.py       # Implementação do servidor gRPC
+├── download_client.py       # Cliente para testes
+├── download_pb2.py          # Arquivos gerados do protobuf
+├── download_pb2_grpc.py     # Serviços gRPC gerados
 ├── .gitignore                 # Arquivos ignorados pelo Git
 └── README.md                  # Esta documentação
 ```
 
 ## Protocolo gRPC
 
-O serviço utiliza o arquivo `downloader.proto` localizado em `../../proto/` que define:
+O serviço utiliza o arquivo `download.proto` localizado em `../../proto/` que define:
 
 ### Serviços
-- `DownloaderService` - Serviço principal para download de vídeos
+- `DownloadService` - Serviço principal para download de vídeos
 
 ### RPCs
 - `GetVideoMetadata` - Unary RPC que retorna metadados do vídeo

@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package download;
+
+service DownloadService {
+  rpc GetVideoMetadata(DownloadRequest) returns (VideoMetadataResponse);
+  rpc DownloadVideo(DownloadRequest) returns (stream DownloadStatusResponse);
+}
+
+message DownloadRequest {
+  string video_url = 1;
+}
+
+message DownloadStatusResponse {
+  oneof status {
+    float progress_percentage = 1;
+    string final_message = 2;
+    string error_message = 3;
+  }
+}
+
+message VideoMetadataResponse {
+  string title = 1;
+  int32 duration = 2;       
+  string thumbnail_url = 3;
+}

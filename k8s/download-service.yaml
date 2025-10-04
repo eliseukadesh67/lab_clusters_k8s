@@ -6,8 +6,13 @@ metadata:
 spec:
   selector:
     app: download-service
+  type: ClusterIP
   ports:
-    - protocol: TCP
+    - name: grpc
+      protocol: TCP
+      port: 50052
+      targetPort: 50052
+    - name: http
+      protocol: TCP
       port: 5002
       targetPort: 5002
-  type: ClusterIP

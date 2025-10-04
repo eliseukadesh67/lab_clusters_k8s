@@ -6,8 +6,14 @@ metadata:
 spec:
   selector:
     app: playlist-service
+  type: ClusterIP
   ports:
-    - protocol: TCP
+    - name: grpc
+      protocol: TCP
+      port: 50051
+      targetPort: 50051
+    - name: http
+      protocol: TCP
       port: 5001
       targetPort: 5001
-  type: ClusterIP
+  

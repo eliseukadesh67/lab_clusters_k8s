@@ -21,8 +21,10 @@ spec:
         - containerPort: 3000
         env: # Injeta as URLs dos serviços internos como variáveis de ambiente
         - name: PLAYLISTS_GRPC_URL
-          value: "playlist-service:5001" # K8s DNS: <service-name>:<port>
+          value: "playlist-service:50051" # K8s DNS: <service-name>:<port>
         - name: DOWNLOADS_GRPC_URL
-          value: "download-service:5002"
+          value: "download-service:50052"
         - name: PORT
           value: "3000"
+        - name: PROTO_DIR
+          value: ./proto

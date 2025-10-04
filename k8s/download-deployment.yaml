@@ -18,4 +18,7 @@ spec:
         image: download-service:latest
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 5002
+        - name: grpc
+          containerPort: 50052
+        - name: http
+          containerPort: 5002

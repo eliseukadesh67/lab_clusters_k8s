@@ -18,4 +18,7 @@ spec:
         image: playlist-service:latest
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 5001
+        - name: grpc
+          containerPort: 50051
+        - name: http
+          containerPort: 5001

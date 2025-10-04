@@ -1,30 +1,26 @@
-# gateway/Dockerfile (CORRIGIDO)
-
-FROM node:24-alpine
+# Usa uma versão LTS (Long Term Support) estável
+FROM node:20-alpine
 
 WORKDIR /app
 
-# CORREÇÃO: Especifique o caminho a partir da raiz do contexto.
-# Copie os arquivos de 'gateway/' para o diretório de trabalho atual '/app'
-COPY gateway/package*.json ./
+ENV GATEWAY_PATH=gateway
 
-# CORREÇÃO: Copie a pasta 'proto' para uma subpasta 'proto' dentro de '/app'
-COPY proto ./proto/
+# Copia os arquivos de dependência a partir da subpasta 'gateway' do contexto de build
+COPY $GATEWAY_PATH/package*.json ./
 
-# Update npm version
-RUN npm install -g npm@11.6.1
+# Instala as dependências de produção
+RUN npm ci --only=production
 
-RUN npm install
+# Copia o resto do código da aplicação a partir da subpasta 'gateway'
+COPY $GATEWAY_PATH .
 
-COPY gateway/ ./
+# Copia a pasta de protos da raiz do contexto para uma pasta 'proto' na imagem
+COPY proto/ ./proto/
 
-# Mudar propriedade dos arquivos
-RUN chown -R node:node /app
-
+# Define o usuário para maior segurança
 USER node
 
-# Expor porta
 EXPOSE 3000
 
-# Comando para executar a aplicação
-CMD ["npm", "start"]
+# O comando para iniciar o servidor
+CMD [ "node", "server.js" ]

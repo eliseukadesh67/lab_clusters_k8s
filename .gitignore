@@ -1,5 +1,6 @@
 # NODE
 node_modules
+.env
 
 # RUBY
 vendor/

@@ -1,21 +1,35 @@
-FROM python:3.11-slim
+# Etapa 1: Escolha da Imagem Base
+# Usamos uma imagem oficial do Ruby. A versão 'slim' é menor, ideal para produção.
+FROM ruby:3.2-slim
 
-WORKDIR /app
+# Define variáveis de ambiente úteis
+ENV APP_HOME=/usr/src/app
+ENV BUNDLE_PATH=/bundle
 
-# Instalar dependências do sistema
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+# Cria o diretório da aplicação
+RUN mkdir -p $APP_HOME
+WORKDIR $APP_HOME
 
-# Copiar requirements e instalar dependências Python
-COPY services/server-a/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Etapa 2: Instalação das Dependências (Gems)
+# Copia apenas os arquivos de dependência primeiro. Isso aproveita o cache do Docker.
+# Se o Gemfile não mudar, o Docker não reinstalará as gems em builds futuros.
+COPY services/server-a/Gemfile services/server-a/Gemfile.lock ./
 
-# Copiar código da aplicação
-COPY services/server-a/ .
+RUN apt-get update -qq && \
+    apt-get install -y build-essential && \
+    bundle install --jobs=4 --retry=3 && \
+    apt-get purge -y --auto-remove build-essential && \
+    rm -rf /var/lib/apt/lists/*
 
-# Expor porta do gRPC
+# Etapa 3: Cópia do Código da Aplicação
+# Com as dependências já instaladas, agora copiamos o restante do código.
+COPY . .
+
+# Etapa 4: Exposição da Porta
+# Expõe a porta em que o seu servidor gRPC irá escutar.
+# 50051 é uma porta comumente usada para serviços gRPC.
 EXPOSE 50051
 
-# Comando para executar o servidor
-CMD ["python", "greeter_server.py"]
+# Etapa 5: Comando de Execução
+# Define o comando que será executado quando o contêiner iniciar.
+CMD ["ruby", "playlist_server.rb"]

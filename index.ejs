@@ -1,0 +1,15 @@
+<%- include('partials/header') %>
+
+<h1>Download de Vídeo por URL</h1>
+<p>Cole a URL do vídeo do YouTube abaixo e clique em "Baixar".</p>
+
+<form action="/download-url" method="POST">
+    <input type="url" name="url" placeholder="https://www.youtube.com/watch?v=..." required>
+    <button type="submit">Baixar</button>
+</form>
+
+<% if (error) { %>
+    <p style="color: red;"><%= error %></p>
+<% } %>
+
+<%- include('partials/footer') %>

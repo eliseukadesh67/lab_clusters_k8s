@@ -1,0 +1,29 @@
+<%- include('partials/header') %>
+
+<h1>Playlist: <%= playlist.name %></h1>
+
+<form action="/videos/<%= playlist.id %>" method="POST">
+    <h3>Adicionar Vídeo por URL</h3>
+    <input type="url" name="video_url" placeholder="https://www.youtube.com/..." required>
+    <button type="submit">Adicionar</button>
+</form>
+
+<hr>
+
+<h2>Vídeos na Playlist</h2>
+<ul>
+    <% if (playlist.videos && playlist.videos.length > 0) { %>
+        <% playlist.videos.forEach(video => { %>
+            <li>
+                <%= video.title || video.url %> <form action="/videos/delete/<%= video.id %>" method="POST" style="display: inline; margin-left: 20px;">
+                    <input type="hidden" name="playlistId" value="<%= playlist.id %>">
+                    <button type="submit">Remover</button>
+                </form>
+            </li>
+        <% }) %>
+    <% } else { %>
+        <li>Nenhum vídeo nesta playlist.</li>
+    <% } %>
+</ul>
+
+<%- include('partials/footer') %>

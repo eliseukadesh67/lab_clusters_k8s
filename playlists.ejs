@@ -1,0 +1,29 @@
+<%- include('partials/header') %>
+
+<h1>Minhas Playlists</h1>
+
+<form action="/playlists" method="POST">
+    <h3>Criar Nova Playlist</h3>
+    <input type="text" name="name" placeholder="Nome da Playlist" required>
+    <button type="submit">Criar</button>
+</form>
+
+<hr>
+
+<h2>Playlists Salvas</h2>
+<ul>
+    <% if (playlists.length > 0) { %>
+        <% playlists.forEach(playlist => { %>
+            <li>
+                <a href="/playlists/<%= playlist.id %>"><%= playlist.name %></a>
+                <form action="/playlists/delete/<%= playlist.id %>" method="POST" style="display: inline; margin-left: 20px;">
+                    <button type="submit">Excluir</button>
+                </form>
+            </li>
+        <% }) %>
+    <% } else { %>
+        <li>Nenhuma playlist encontrada.</li>
+    <% } %>
+</ul>
+
+<%- include('partials/footer') %>

@@ -14,13 +14,12 @@ const promisifyGrpc = (method) => (payload) => {
 };
 
 export default {
-    create: promisifyGrpc(grpcClient.CreatePlaylist),
-    list: promisifyGrpc(grpcClient.ListPlaylists),
-    getById: promisifyGrpc(grpcClient.GetPlaylist),
-    updateById: promisifyGrpc(grpcClient.EditPlaylist),
+    create: promisifyGrpc(grpcClient.PostPlaylists),
+    list: promisifyGrpc(grpcClient.GetPlaylists),
+    getById: promisifyGrpc(grpcClient.GetPlaylistsById),
+    updateById: promisifyGrpc(grpcClient.PatchPlaylists),
     deleteById: promisifyGrpc(grpcClient.DeletePlaylist),
-    addVideo: promisifyGrpc(grpcClient.AddVideo),
-    listVideos: promisifyGrpc(grpcClient.ListVideos),
-    getVideo: promisifyGrpc(grpcClient.GetVideo),
-    deleteVideo: promisifyGrpc(grpcClient.DeleteVideo),
+    addVideo: promisifyGrpc(grpcClient.PostVideos),
+    getVideo: promisifyGrpc(grpcClient.GetVideosById),
+    deleteVideo: promisifyGrpc(grpcClient.DeleteVideos),
 };

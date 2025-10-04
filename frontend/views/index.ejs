@@ -1,15 +1,26 @@
 <%- include('partials/header') %>
 
-<h1>Download de Vídeo por URL</h1>
-<p>Cole a URL do vídeo do YouTube abaixo e clique em "Baixar".</p>
+<div class="mt-4">
+    <h1>Download de Vídeos</h1>
+    <p class="lead text-muted">Cole a URL do YouTube e baixe instantaneamente.</p>
 
-<form action="/download-url" method="POST">
-    <input type="url" name="url" placeholder="https://www.youtube.com/watch?v=..." required>
-    <button type="submit">Baixar</button>
-</form>
+    <div class="card my-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3"><i class="fas fa-link me-2 text-primary"></i>URL do Vídeo</h5>
+            <form action="/download-url" method="POST" class="d-flex gap-2">
+                <input type="url" name="url" class="form-control" placeholder="https://www.youtube.com/watch?v=..." required>
+                <button type="submit" class="btn btn-success px-4">
+                    <i class="fas fa-download me-2"></i>Baixar
+                </button>
+            </form>
+        </div>
+    </div>
 
-<% if (error) { %>
-    <p style="color: red;"><%= error %></p>
-<% } %>
+    <% if (error) { %>
+        <div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
+        </div>
+    <% } %>
+</div>
 
 <%- include('partials/footer') %>

@@ -1,29 +1,66 @@
 <%- include('partials/header') %>
 
-<h1>Playlist: <%= playlist.name %></h1>
+<div class="container mt-4">
+    <h1><%= playlist.name %></h1>
 
-<form action="/videos/<%= playlist.id %>" method="POST">
-    <h3>Adicionar Vídeo por URL</h3>
-    <input type="url" name="video_url" placeholder="https://www.youtube.com/..." required>
-    <button type="submit">Adicionar</button>
-</form>
+    <div class="card my-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3"><i class="fas fa-plus me-2 text-primary"></i>Adicionar Vídeo</h5>
+            <form action="/videos/<%= playlist.id %>" method="POST" class="d-flex gap-2">
+                <input type="url" name="video_url" class="form-control" placeholder="URL do YouTube" required>
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="fas fa-plus me-2"></i>Adicionar
+                </button>
+            </form>
+        </div>
+    </div>
 
-<hr>
+    <h2><i class="fas fa-video me-2 text-secondary"></i>Vídeos</h2>
+    <div class="list-group">
+        <% if (playlist.videos && playlist.videos.length > 0) { %>
+            <% playlist.videos.forEach(video => { %>
+                <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                    
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <a href="<%= video.url %>" target="_blank" rel="noopener noreferrer" class="me-3">
+                            <img src="<%= video.thumbnail_url %>" alt="<%= video.title %>" 
+                                 class="rounded shadow-sm" 
+                                 style="width: 120px; height: 68px; object-fit: cover;">
+                        </a>
+                        <div class="flex-grow-1">
+                            <a href="<%= video.url %>" target="_blank" rel="noopener noreferrer" 
+                               class="fw-bold text-decoration-none text-dark d-block mb-1">
+                                <%= video.title %>
+                            </a>
+                            <%
+                                const minutes = Math.floor(video.duration / 60);
+                                const seconds = video.duration % 60;
+                                const formattedDuration = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                            %>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i><%= formattedDuration %>
+                            </small>
+                        </div>
+                    </div>
 
-<h2>Vídeos na Playlist</h2>
-<ul>
-    <% if (playlist.videos && playlist.videos.length > 0) { %>
-        <% playlist.videos.forEach(video => { %>
-            <li>
-                <%= video.title || video.url %> <form action="/videos/delete/<%= video.id %>" method="POST" style="display: inline; margin-left: 20px;">
-                    <input type="hidden" name="playlistId" value="<%= playlist.id %>">
-                    <button type="submit">Remover</button>
-                </form>
-            </li>
-        <% }) %>
-    <% } else { %>
-        <li>Nenhum vídeo nesta playlist.</li>
-    <% } %>
-</ul>
+                    <div class="ms-3">
+                        <form action="/videos/delete/<%= video.id %>" method="POST" class="m-0">
+                            <input type="hidden" name="playlistId" value="<%= playlist.id %>">
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Remover este vídeo?')">
+                                <i class="fas fa-trash me-1"></i>Remover
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div class="list-group-item text-center text-muted py-5">
+                <i class="fas fa-video fa-3x mb-3 d-block"></i>
+                <p class="mb-0">Nenhum vídeo nesta playlist.</p>
+                <small>Adicione URLs do YouTube acima.</small>
+            </div>
+        <% } %>
+    </div>
+</div>
 
 <%- include('partials/footer') %>

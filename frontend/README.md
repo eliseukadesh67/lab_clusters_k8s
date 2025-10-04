@@ -1,5 +1,9 @@
 ## Inicializando o Web Client
 
+- Bootstrap 5.3.3 - Framework CSS
+- FontAwesome 6.4.0 - Ícones
+
+
 #### Instale as Dependências
 
 Execute o comando abaixo para instalar todas as dependências listadas no arquivo package.json:
@@ -32,3 +36,4 @@ Como alternativa, você pode adicionar um script start ao seu package.json e usa
 Com o servidor em execução, abra seu navegador de internet e acesse a seguinte URL:
 
 http://localhost:3000
+

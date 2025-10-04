@@ -5,23 +5,20 @@
 require 'google/protobuf'
 
 
-descriptor_data = "\n\x0eplaylist.proto\x12\x08playlist\"%\n\x15\x43reatePlaylistRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\")\n\x12GetPlaylistRequest\x12\x13\n\x0bplaylist_id\x18\x01 \x01(\t\"\x16\n\x14ListPlaylistsRequest\"8\n\x13\x45\x64itPlaylistRequest\x12\x13\n\x0bplaylist_id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\",\n\x15\x44\x65letePlaylistRequest\x12\x13\n\x0bplaylist_id\x18\x01 \x01(\t\"3\n\x0f\x41\x64\x64VideoRequest\x12\x13\n\x0bplaylist_id\x18\x01 \x01(\t\x12\x0b\n\x03url\x18\x02 \x01(\t\"\'\n\x10ListVideoRequest\x12\x13\n\x0bplaylist_id\x18\x01 \x01(\t\";\n\x12\x44\x65leteVideoRequest\x12\x13\n\x0bplaylist_id\x18\x01 \x01(\t\x12\x10\n\x08video_id\x18\x02 \x01(\t\"8\n\x0fGetVideoRequest\x12\x13\n\x0bplaylist_id\x18\x01 \x01(\t\x12\x10\n\x08video_id\x18\x02 \x01(\t\"H\n\x10PlaylistResponse\x12\x13\n\x0bplaylist_id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x11\n\tqtd_video\x18\x03 \x01(\x05\"F\n\x15ListPlaylistsResponse\x12-\n\tplaylists\x18\x01 \x03(\x0b\x32\x1a.playlist.PlaylistResponse\"{\n\rVideoResponse\x12\x13\n\x0bplaylist_id\x18\x01 \x01(\t\x12\x10\n\x08video_id\x18\x02 \x01(\t\x12\x0b\n\x03url\x18\x03 \x01(\t\x12\r\n\x05title\x18\x04 \x01(\t\x12\x10\n\x08\x64uration\x18\x05 \x01(\x05\x12\x15\n\rthumbnail_url\x18\x06 \x01(\t\"R\n\x12ListVideosResponse\x12\x13\n\x0bplaylist_id\x18\x01 \x01(\t\x12\'\n\x06videos\x18\x02 \x03(\x0b\x32\x17.playlist.VideoResponse2\xad\x05\n\x0fPlaylistService\x12M\n\x0e\x43reatePlaylist\x12\x1f.playlist.CreatePlaylistRequest\x1a\x1a.playlist.PlaylistResponse\x12G\n\x0bGetPlaylist\x12\x1c.playlist.GetPlaylistRequest\x1a\x1a.playlist.PlaylistResponse\x12P\n\rListPlaylists\x12\x1e.playlist.ListPlaylistsRequest\x1a\x1f.playlist.ListPlaylistsResponse\x12I\n\x0c\x45\x64itPlaylist\x12\x1d.playlist.EditPlaylistRequest\x1a\x1a.playlist.PlaylistResponse\x12R\n\x0e\x44\x65letePlaylist\x12\x1f.playlist.DeletePlaylistRequest\x1a\x1f.playlist.ListPlaylistsResponse\x12>\n\x08\x41\x64\x64Video\x12\x19.playlist.AddVideoRequest\x1a\x17.playlist.VideoResponse\x12>\n\x08GetVideo\x12\x19.playlist.GetVideoRequest\x1a\x17.playlist.VideoResponse\x12\x46\n\nListVideos\x12\x1a.playlist.ListVideoRequest\x1a\x1c.playlist.ListVideosResponse\x12I\n\x0b\x44\x65leteVideo\x12\x1c.playlist.DeleteVideoRequest\x1a\x1c.playlist.ListVideosResponseb\x06proto3"
+descriptor_data = "\n\x0eplaylist.proto\x12\x08playlist\"\x07\n\x05\x45mpty\"E\n\x08Playlist\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x1f\n\x06videos\x18\x03 \x03(\x0b\x32\x0f.playlist.Video\"m\n\x05Video\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0b\n\x03url\x18\x02 \x01(\t\x12\r\n\x05title\x18\x03 \x01(\t\x12\x10\n\x08\x64uration\x18\x04 \x01(\x05\x12\x15\n\rthumbnail_url\x18\x05 \x01(\t\x12\x13\n\x0bplaylist_id\x18\x06 \x01(\t\".\n\tPlaylists\x12!\n\x05items\x18\x01 \x03(\x0b\x32\x12.playlist.Playlist\"(\n\x06Videos\x12\x1e\n\x05items\x18\x01 \x03(\x0b\x32\x0f.playlist.Video\"\x18\n\nPlaylistId\x12\n\n\x02id\x18\x01 \x01(\t\"\x15\n\x07VideoId\x12\n\n\x02id\x18\x01 \x01(\t\"\x1c\n\x0cPlaylistInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\"-\n\x11PlaylistPatchInfo\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\"1\n\rVideoPostInfo\x12\x13\n\x0bplaylist_id\x18\x01 \x01(\t\x12\x0b\n\x03url\x18\x02 \x01(\t2\xe6\x03\n\x0fPlaylistService\x12\x34\n\x0cGetPlaylists\x12\x0f.playlist.Empty\x1a\x13.playlist.Playlists\x12<\n\x10GetPlaylistsById\x12\x14.playlist.PlaylistId\x1a\x12.playlist.Playlist\x12=\n\rPostPlaylists\x12\x16.playlist.PlaylistInfo\x1a\x14.playlist.PlaylistId\x12\x43\n\x0ePatchPlaylists\x12\x1b.playlist.PlaylistPatchInfo\x1a\x14.playlist.PlaylistId\x12\x38\n\x0f\x44\x65letePlaylists\x12\x14.playlist.PlaylistId\x1a\x0f.playlist.Empty\x12\x33\n\rGetVideosById\x12\x11.playlist.VideoId\x1a\x0f.playlist.Video\x12\x38\n\nPostVideos\x12\x17.playlist.VideoPostInfo\x1a\x11.playlist.VideoId\x12\x32\n\x0c\x44\x65leteVideos\x12\x11.playlist.VideoId\x1a\x0f.playlist.Emptyb\x06proto3"
 
 pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Playlist
-  CreatePlaylistRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.CreatePlaylistRequest").msgclass
-  GetPlaylistRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.GetPlaylistRequest").msgclass
-  ListPlaylistsRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.ListPlaylistsRequest").msgclass
-  EditPlaylistRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.EditPlaylistRequest").msgclass
-  DeletePlaylistRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.DeletePlaylistRequest").msgclass
-  AddVideoRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.AddVideoRequest").msgclass
-  ListVideoRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.ListVideoRequest").msgclass
-  DeleteVideoRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.DeleteVideoRequest").msgclass
-  GetVideoRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.GetVideoRequest").msgclass
-  PlaylistResponse = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.PlaylistResponse").msgclass
-  ListPlaylistsResponse = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.ListPlaylistsResponse").msgclass
-  VideoResponse = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.VideoResponse").msgclass
-  ListVideosResponse = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.ListVideosResponse").msgclass
+  Empty = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.Empty").msgclass
+  Playlist = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.Playlist").msgclass
+  Video = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.Video").msgclass
+  Playlists = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.Playlists").msgclass
+  Videos = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.Videos").msgclass
+  PlaylistId = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.PlaylistId").msgclass
+  VideoId = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.VideoId").msgclass
+  PlaylistInfo = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.PlaylistInfo").msgclass
+  PlaylistPatchInfo = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.PlaylistPatchInfo").msgclass
+  VideoPostInfo = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("playlist.VideoPostInfo").msgclass
 end

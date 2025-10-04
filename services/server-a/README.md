@@ -35,6 +35,11 @@ O Serviço A se comunica com o Serviço B (Downloader) para obter metadados dos 
 
 1. Instale as dependências localmente, na pasta `services/server-a`:
 ```bash
+# Instalando as gens
+```bash
+bundle config set --local path 'vendor/bundle'
+bundle install
+```
 # Arquivos para playlist
 bundle exec grpc_tools_ruby_protoc -I ../../proto --ruby_out=. --grpc_out=. ../../proto/playlist.proto
 

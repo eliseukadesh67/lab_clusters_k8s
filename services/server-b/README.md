@@ -41,7 +41,7 @@ pip install -r requirements.txt
 
 1. Na pasta `services/server-b` gere os arquivos proto:
 ```bash
-python -m grpc_tools.protoc -I ../../proto --python_out=. --grpc_python_out=. ../../proto/downloader.proto
+python -m grpc_tools.protoc -I ../../proto --python_out=. --grpc_python_out=. ../../proto/download.proto
 ```
 
 ## Execução

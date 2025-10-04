@@ -3,3 +3,5 @@ source 'https://rubygems.org'
 gem 'grpc'
 gem 'grpc-tools'
 gem 'securerandom', require: false
+gem 'sqlite3'
+gem 'ulid'

@@ -14,17 +14,14 @@ module Playlist
       self.unmarshal_class_method = :decode
       self.service_name = 'playlist.PlaylistService'
 
-      # Playlist
-      rpc :CreatePlaylist, ::Playlist::CreatePlaylistRequest, ::Playlist::PlaylistResponse
-      rpc :GetPlaylist, ::Playlist::GetPlaylistRequest, ::Playlist::PlaylistResponse
-      rpc :ListPlaylists, ::Playlist::ListPlaylistsRequest, ::Playlist::ListPlaylistsResponse
-      rpc :EditPlaylist, ::Playlist::EditPlaylistRequest, ::Playlist::PlaylistResponse
-      rpc :DeletePlaylist, ::Playlist::DeletePlaylistRequest, ::Playlist::ListPlaylistsResponse
-      # Video
-      rpc :AddVideo, ::Playlist::AddVideoRequest, ::Playlist::VideoResponse
-      rpc :GetVideo, ::Playlist::GetVideoRequest, ::Playlist::VideoResponse
-      rpc :ListVideos, ::Playlist::ListVideoRequest, ::Playlist::ListVideosResponse
-      rpc :DeleteVideo, ::Playlist::DeleteVideoRequest, ::Playlist::ListVideosResponse
+      rpc :GetPlaylists, ::Playlist::Empty, ::Playlist::Playlists
+      rpc :GetPlaylistsById, ::Playlist::PlaylistId, ::Playlist::Playlist
+      rpc :PostPlaylists, ::Playlist::PlaylistInfo, ::Playlist::PlaylistId
+      rpc :PatchPlaylists, ::Playlist::PlaylistPatchInfo, ::Playlist::PlaylistId
+      rpc :DeletePlaylists, ::Playlist::PlaylistId, ::Playlist::Empty
+      rpc :GetVideosById, ::Playlist::VideoId, ::Playlist::Video
+      rpc :PostVideos, ::Playlist::VideoPostInfo, ::Playlist::VideoId
+      rpc :DeleteVideos, ::Playlist::VideoId, ::Playlist::Empty
     end
 
     Stub = Service.rpc_stub_class

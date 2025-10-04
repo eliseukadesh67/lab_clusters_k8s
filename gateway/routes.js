@@ -12,10 +12,10 @@ const setupRoutes = (app) => {
   app.delete('/playlists/:id', PlaylistController.deletePlaylistById);
   
   // --- Rotas para Vídeos dentro de uma Playlist ---
-  app.post('/playlists/:playlistId/videos', PlaylistController.addVideoToPlaylist);
-  app.get('/playlists/:playlistId/videos', PlaylistController.listVideosInPlaylist);
+  app.post('/playlists/videos/:playlistId', PlaylistController.addVideoToPlaylist);
+  app.get('/playlists/videos/:playlistId', PlaylistController.listVideosInPlaylist);
   app.get('/playlists/:playlistId/videos/:videoId', PlaylistController.getVideoFromPlaylist);
-  app.delete('/playlists/:playlistId/videos/:videoId', PlaylistController.deleteVideoFromPlaylist);
+  app.delete('/playlists/videos/:videoId', PlaylistController.deleteVideoFromPlaylist);
 
   // --- Rotas de Downloads ---
   app.get('/downloads/metadata', DownloadController.getVideoMetadata);

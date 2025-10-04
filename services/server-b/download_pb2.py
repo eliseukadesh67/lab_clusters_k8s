@@ -24,19 +24,21 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x64ownload.proto\x12\x08\x64ownload\"$\n\x0f\x44ownloadRequest\x12\x11\n\tvideo_url\x18\x01 \x01(\t\"s\n\x16\x44ownloadStatusResponse\x12\x1d\n\x13progress_percentage\x18\x01 \x01(\x02H\x00\x12\x17\n\rfinal_message\x18\x02 \x01(\tH\x00\x12\x17\n\rerror_message\x18\x03 \x01(\tH\x00\x42\x08\n\x06status\"O\n\x15VideoMetadataResponse\x12\r\n\x05title\x18\x01 \x01(\t\x12\x10\n\x08\x64uration\x18\x02 \x01(\x05\x12\x15\n\rthumbnail_url\x18\x03 \x01(\t2\xb1\x01\n\x0f\x44ownloadService\x12N\n\x10GetVideoMetadata\x12\x19.download.DownloadRequest\x1a\x1f.download.VideoMetadataResponse\x12N\n\rDownloadVideo\x12\x19.download.DownloadRequest\x1a .download.DownloadStatusResponse0\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x64ownload.proto\x12\x08\x64ownload\"\x16\n\x07Request\x12\x0b\n\x03url\x18\x01 \x01(\t\"W\n\x08Metadata\x12\r\n\x05title\x18\x01 \x01(\t\x12\x10\n\x08\x64uration\x18\x02 \x01(\x05\x12\x15\n\rthumbnail_url\x18\x03 \x01(\t\x12\x13\n\x0btotal_bytes\x18\x04 \x01(\x03\"*\n\x0eProgressUpdate\x12\x18\n\x10\x62ytes_downloaded\x18\x01 \x01(\x03\"X\n\rDownloadChunk\x12,\n\x08progress\x18\x01 \x01(\x0b\x32\x18.download.ProgressUpdateH\x00\x12\x0e\n\x04\x64\x61ta\x18\x02 \x01(\x0cH\x00\x42\t\n\x07payload2\x80\x01\n\x0f\x44ownloadService\x12\x34\n\x0bGetMetadata\x12\x11.download.Request\x1a\x12.download.Metadata\x12\x37\n\x07GetFile\x12\x11.download.Request\x1a\x17.download.DownloadChunk0\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'download_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_DOWNLOADREQUEST']._serialized_start=28
-  _globals['_DOWNLOADREQUEST']._serialized_end=64
-  _globals['_DOWNLOADSTATUSRESPONSE']._serialized_start=66
-  _globals['_DOWNLOADSTATUSRESPONSE']._serialized_end=181
-  _globals['_VIDEOMETADATARESPONSE']._serialized_start=183
-  _globals['_VIDEOMETADATARESPONSE']._serialized_end=262
-  _globals['_DOWNLOADSERVICE']._serialized_start=265
-  _globals['_DOWNLOADSERVICE']._serialized_end=442
+  _globals['_REQUEST']._serialized_start=28
+  _globals['_REQUEST']._serialized_end=50
+  _globals['_METADATA']._serialized_start=52
+  _globals['_METADATA']._serialized_end=139
+  _globals['_PROGRESSUPDATE']._serialized_start=141
+  _globals['_PROGRESSUPDATE']._serialized_end=183
+  _globals['_DOWNLOADCHUNK']._serialized_start=185
+  _globals['_DOWNLOADCHUNK']._serialized_end=273
+  _globals['_DOWNLOADSERVICE']._serialized_start=276
+  _globals['_DOWNLOADSERVICE']._serialized_end=404
 # @@protoc_insertion_point(module_scope)

@@ -164,12 +164,13 @@ class PlaylistServer < Playlist::PlaylistService::Service
     raise GRPC::NotFound.new("Playlist com ID '#{request.playlist_id}' não encontrada.") unless repo.get_id_playlists(request.playlist_id)
 
     begin
-      metadata = @download_stub.get_video_metadata(Download::DownloadRequest.new(video_url: request.url))
+      metadata = @download_stub.get_metadata(Download::Request.new(url: request.url))
+
       new_video = repo.post_videos(
-        playlist_id: request.playlist_id, 
-        url: request.url, 
+        playlist_id: request.playlist_id,
+        url: request.url,
         title: metadata.title,
-        duration: metadata.duration, 
+        duration: metadata.duration,
         thumbnail_url: metadata.thumbnail_url
       )
       Playlist::VideoId.new(id: new_video.id)

@@ -3,24 +3,28 @@ syntax = "proto3";
 package download;
 
 service DownloadService {
-  rpc GetVideoMetadata(DownloadRequest) returns (VideoMetadataResponse);
-  rpc DownloadVideo(DownloadRequest) returns (stream DownloadStatusResponse);
+  rpc GetMetadata(Request) returns (Metadata);
+  rpc GetFile(Request) returns (stream DownloadChunk);
 }
 
-message DownloadRequest {
-  string video_url = 1;
+message Request {
+  string url = 1;
 }
 
-message DownloadStatusResponse {
-  oneof status {
-    float progress_percentage = 1;
-    string final_message = 2;
-    string error_message = 3;
-  }
-}
-
-message VideoMetadataResponse {
+message Metadata {
   string title = 1;
-  int32 duration = 2;       
+  int32 duration = 2;
   string thumbnail_url = 3;
+  int64 total_bytes = 4;
+}
+
+message ProgressUpdate {
+   int64 bytes_downloaded = 1;
+}
+
+message DownloadChunk {
+  oneof payload {
+    ProgressUpdate progress = 1;
+    bytes data = 2;
+  }
 }

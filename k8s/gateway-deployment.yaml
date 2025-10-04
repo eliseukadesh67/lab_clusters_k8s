@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-deployment
+  namespace: microservices-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway-service
+  template:
+    metadata:
+      labels:
+        app: gateway-service
+    spec:
+      containers:
+      - name: gateway-service-container
+        image: gateway-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+        env: # Injeta as URLs dos serviços internos como variáveis de ambiente
+        - name: PLAYLISTS_GRPC_URL
+          value: "playlist-service:5001" # K8s DNS: <service-name>:<port>
+        - name: DOWNLOADS_GRPC_URL
+          value: "download-service:5002"
+        - name: PORT
+          value: "3000"

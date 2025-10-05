@@ -9,7 +9,7 @@ ENV GATEWAY_PATH=gateway
 COPY $GATEWAY_PATH/package*.json ./
 
 # Instala as dependências de produção
-RUN npm ci --only=production
+RUN npm install
 
 # Copia o resto do código da aplicação a partir da subpasta 'gateway'
 COPY $GATEWAY_PATH .

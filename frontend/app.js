@@ -15,31 +15,6 @@ app.get('/', (req, res) => {
     res.render('index', { videoUrl: null, error: null });
 });
 
-app.post('/download-url', (req, res) => {
-    const { url } = req.body;
-
-    if (url) {
-        const downloadApiUrl = `${API_URL}/downloads/${encodeURIComponent(url)}`;
-        console.log(`Redirecionando para: ${downloadApiUrl}`);
-        res.redirect(downloadApiUrl);
-    } else {
-        res.render('index', { videoUrl: null, error: 'URL inválida.' });
-    }
-});
-
-app.get('/playlists', async (req, res) => {
-    try {
-        const response = await axios.get(`${API_URL}/playlists`);
-
-        const playlistsParaTemplate = { items: response.data };
-        
-        res.render('playlists', { playlists: playlistsParaTemplate });
-    } catch (error) {
-        console.error(error);
-        res.render('playlists', { playlists: { items: [] } });
-    }
-});
-
 app.post('/playlists', async (req, res) => {
     try {
         const { name } = req.body;
@@ -51,7 +26,20 @@ app.post('/playlists', async (req, res) => {
     }
 });
 
-// Função original
+app.get('/playlists', async (req, res) => {
+    try {
+        const response = await axios.get(`${API_URL}/playlists`);
+        
+        const playlistsParaTemplate = { items: response.data };
+        
+        res.render('playlists', { playlists: playlistsParaTemplate });
+    } catch (error) {
+        console.error(error);
+        res.render('playlists', { playlists: { items: [] } });
+    }
+});
+
+// Versão correta como documentado
 // app.get('/playlists/:id', async (req, res) => {
 //     try {
 //         const playlistId = req.params.id;
@@ -65,6 +53,7 @@ app.post('/playlists', async (req, res) => {
 //     }
 // });
 
+// Versão de teste para execução local do frontend
 app.get('/playlists/:id', async (req, res) => {
     try {
         const playlistId = req.params.id;
@@ -93,6 +82,32 @@ app.get('/playlists/:id', async (req, res) => {
         console.error("Ocorreu um erro ao buscar os detalhes da playlist:", error.message);
         res.redirect('/playlists');
     }
+}); 
+
+// PATCH /playlists/:name
+app.post('/playlists/edit/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name } = req.body;
+
+        await axios.patch(`${API_URL}/playlists/${id}`, { name: name });
+
+        // Redireciona de volta para a PRÓPRIA página de detalhes
+        res.redirect(`/playlists/${id}`);
+    } catch (error) {
+        console.error("Erro ao atualizar a playlist:", error.message);
+        res.redirect('/playlists'); // Em caso de erro, volta para a lista
+    }
+});
+
+app.post('/playlists/delete/:id', async (req, res) => {
+    try {
+        await axios.delete(`${API_URL}/playlists/${req.params.id}`);
+        res.redirect('/playlists');
+    } catch (error) {
+        console.error(error);
+        res.redirect('/playlists');
+    }
 });
 
 app.post('/videos/:id_playlist', async (req, res) => {
@@ -107,16 +122,6 @@ app.post('/videos/:id_playlist', async (req, res) => {
     }
 });
 
-app.post('/playlists/delete/:id', async (req, res) => {
-    try {
-        await axios.delete(`${API_URL}/playlists/${req.params.id}`);
-        res.redirect('/playlists');
-    } catch (error) {
-        console.error(error);
-        res.redirect('/playlists');
-    }
-});
-
 app.post('/videos/delete/:id', async (req, res) => {
     const videoId = req.params.id;
     const { playlistId } = req.body;
@@ -126,6 +131,33 @@ app.post('/videos/delete/:id', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.redirect(`/playlists/${playlistId}`);
+    }
+});
+
+// TODO: GET /playlists/videos/:id
+app.post('/playlists/videos/:id', async (req, res) => {
+    // ...
+});
+
+// TODO: GET /downloads/video/:id
+app.post('/downloads/video/:id', async (req, res) => {
+    // ...
+});
+
+// TODO: GET /downloads/playlist/:id 
+app.post('/downloads/playlist/:id', async (req, res) => {
+    // ...
+});
+
+app.post('/downloads', (req, res) => {
+    const { url } = req.body;
+
+    if (url) {
+        const downloadApiUrl = `${API_URL}/downloads/${encodeURIComponent(url)}`;
+        console.log(`Redirecionando para: ${downloadApiUrl}`);
+        res.redirect(downloadApiUrl);
+    } else {
+        res.render('index', { videoUrl: null, error: 'URL inválida.' });
     }
 });
 

@@ -28,3 +28,5 @@ spec:
           value: "3000"
         - name: PROTO_DIR
           value: ./proto
+        - name: NODE_ENV
+          value: development

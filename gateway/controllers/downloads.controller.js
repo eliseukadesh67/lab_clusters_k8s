@@ -29,7 +29,7 @@ const downloadVideo = (req, res, next) => {
 
     try {
         // Apenas o cliente gRPC suporta o streaming definido no proto
-        const stream = downloadGrpc.download({ video_url: url });
+        const stream = gRpcDownloadClient.download({ url });
 
         // 1. Configura os headers para Server-Sent Events (SSE)
         res.setHeader('Content-Type', 'text/event-stream');
@@ -65,7 +65,10 @@ const downloadVideo = (req, res, next) => {
         });
 
     } catch (error) {
-        next(error);
+      console.error('--- ERRO SINCRONO AO INICIAR STREAM ---');
+      console.error(error);
+      req.log.error({ err: error }, 'Falha síncrona ao iniciar o stream de download');
+      next(error);
     }
 };
 

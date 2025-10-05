@@ -32,7 +32,7 @@ const getMetadata = (payload) => {
  */
 const download = (payload) => {
     console.log('[gRPC Client Download] Iniciando stream de download...');
-    const call = grpcClient.DownloadVideo(payload);
+    const call = grpcClient.GetFile(payload);
     return call;
 };
 

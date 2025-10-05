@@ -18,7 +18,7 @@ export default {
     list: promisifyGrpc(grpcClient.GetPlaylists),
     getById: promisifyGrpc(grpcClient.GetPlaylistsById),
     updateById: promisifyGrpc(grpcClient.PatchPlaylists),
-    deleteById: promisifyGrpc(grpcClient.DeletePlaylist),
+    deleteById: promisifyGrpc(grpcClient.DeletePlaylists),
     addVideo: promisifyGrpc(grpcClient.PostVideos),
     getVideo: promisifyGrpc(grpcClient.GetVideosById),
     deleteVideo: promisifyGrpc(grpcClient.DeleteVideos),

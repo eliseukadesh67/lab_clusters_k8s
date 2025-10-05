@@ -2,14 +2,17 @@ require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const app = express();
-const PORT = 3000;
+const PORT = 8080;
 
+const PROTOCOL= process.env.PROTOCOL
 const API_URL = process.env.API_URL;
 
 app.set('view engine', 'ejs');
 
 app.use(express.static('public')); // Para servir arquivos CSS e JS estáticos
 app.use(express.urlencoded({ extended: true })); // Para conseguir ler dados de formulários (req.body)
+
+axios.defaults.headers.common['x-communication-protocol'] = PROTOCOL;
 
 app.get('/', (req, res) => {
     res.render('index', { videoUrl: null, error: null });
@@ -29,8 +32,7 @@ app.post('/playlists', async (req, res) => {
 app.get('/playlists', async (req, res) => {
     try {
         const response = await axios.get(`${API_URL}/playlists`);
-        
-        const playlistsParaTemplate = { items: response.data };
+        const playlistsParaTemplate = { items: response.data.data.items };
         
         res.render('playlists', { playlists: playlistsParaTemplate });
     } catch (error) {
@@ -40,21 +42,19 @@ app.get('/playlists', async (req, res) => {
 });
 
 // Versão correta como documentado
-// app.get('/playlists/:id', async (req, res) => {
-//     try {
-//         const playlistId = req.params.id;
-
-//         const response = await axios.get(`${API_URL}/playlists/${playlistId}?_embed=videos`);
-
-//         res.render('playlist-detalhe', { playlist: response.data });
-//     } catch (error) {
-//         console.error(error);
-//         res.redirect('/playlists');
-//     }
-// });
+app.get('/playlists/:id', async (req, res) => {
+    try {
+        const playlistId = req.params.id
+        const response = await axios.get(`${API_URL}/playlists/${playlistId}`)
+        res.render('playlist-detalhe', { playlist: response.data.data });
+    } catch (error) {
+        console.error(error);
+        res.redirect('/playlists');
+    }
+});
 
 // Versão de teste para execução local do frontend
-app.get('/playlists/:id', async (req, res) => {
+/* app.get('/playlists/:id', async (req, res) => {
     try {
         const playlistId = req.params.id;
 
@@ -82,7 +82,7 @@ app.get('/playlists/:id', async (req, res) => {
         console.error("Ocorreu um erro ao buscar os detalhes da playlist:", error.message);
         res.redirect('/playlists');
     }
-}); 
+});  */
 
 // PATCH /playlists/:name
 app.post('/playlists/edit/:id', async (req, res) => {
@@ -114,7 +114,7 @@ app.post('/videos/:id_playlist', async (req, res) => {
     try {
         const { id_playlist } = req.params;
         const { video_url } = req.body;
-        await axios.post(`${API_URL}/videos/${id_playlist}`, { url: video_url });
+        await axios.post(`${API_URL}/playlists/videos/${id_playlist}`, { url: video_url });
         res.redirect(`/playlists/${id_playlist}`);
     } catch (error) {
         console.error(error);
@@ -126,7 +126,7 @@ app.post('/videos/delete/:id', async (req, res) => {
     const videoId = req.params.id;
     const { playlistId } = req.body;
     try {
-        await axios.delete(`${API_URL}/videos/${videoId}`);
+        await axios.delete(`${API_URL}/playlists/videos/${videoId}`);
         res.redirect(`/playlists/${playlistId}`);
     } catch (error) {
         console.error(error);
@@ -153,7 +153,7 @@ app.post('/downloads', (req, res) => {
     const { url } = req.body;
 
     if (url) {
-        const downloadApiUrl = `${API_URL}/downloads/${encodeURIComponent(url)}`;
+        const downloadApiUrl = `${API_URL}/downloads/?url=${encodeURIComponent(url)}`;
         console.log(`Redirecionando para: ${downloadApiUrl}`);
         res.redirect(downloadApiUrl);
     } else {

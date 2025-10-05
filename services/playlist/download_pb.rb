@@ -5,13 +5,14 @@
 require 'google/protobuf'
 
 
-descriptor_data = "\n\x0e\x64ownload.proto\x12\x08\x64ownload\"$\n\x0f\x44ownloadRequest\x12\x11\n\tvideo_url\x18\x01 \x01(\t\"s\n\x16\x44ownloadStatusResponse\x12\x1d\n\x13progress_percentage\x18\x01 \x01(\x02H\x00\x12\x17\n\rfinal_message\x18\x02 \x01(\tH\x00\x12\x17\n\rerror_message\x18\x03 \x01(\tH\x00\x42\x08\n\x06status\"O\n\x15VideoMetadataResponse\x12\r\n\x05title\x18\x01 \x01(\t\x12\x10\n\x08\x64uration\x18\x02 \x01(\x05\x12\x15\n\rthumbnail_url\x18\x03 \x01(\t2\xb1\x01\n\x0f\x44ownloadService\x12N\n\x10GetVideoMetadata\x12\x19.download.DownloadRequest\x1a\x1f.download.VideoMetadataResponse\x12N\n\rDownloadVideo\x12\x19.download.DownloadRequest\x1a .download.DownloadStatusResponse0\x01\x62\x06proto3"
+descriptor_data = "\n\x0e\x64ownload.proto\x12\x08\x64ownload\"\x16\n\x07Request\x12\x0b\n\x03url\x18\x01 \x01(\t\"W\n\x08Metadata\x12\r\n\x05title\x18\x01 \x01(\t\x12\x10\n\x08\x64uration\x18\x02 \x01(\x05\x12\x15\n\rthumbnail_url\x18\x03 \x01(\t\x12\x13\n\x0btotal_bytes\x18\x04 \x01(\x03\"*\n\x0eProgressUpdate\x12\x18\n\x10\x62ytes_downloaded\x18\x01 \x01(\x03\"X\n\rDownloadChunk\x12,\n\x08progress\x18\x01 \x01(\x0b\x32\x18.download.ProgressUpdateH\x00\x12\x0e\n\x04\x64\x61ta\x18\x02 \x01(\x0cH\x00\x42\t\n\x07payload2\x80\x01\n\x0f\x44ownloadService\x12\x34\n\x0bGetMetadata\x12\x11.download.Request\x1a\x12.download.Metadata\x12\x37\n\x07GetFile\x12\x11.download.Request\x1a\x17.download.DownloadChunk0\x01\x62\x06proto3"
 
 pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)
 
 module Download
-  DownloadRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("download.DownloadRequest").msgclass
-  DownloadStatusResponse = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("download.DownloadStatusResponse").msgclass
-  VideoMetadataResponse = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("download.VideoMetadataResponse").msgclass
+  Request = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("download.Request").msgclass
+  Metadata = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("download.Metadata").msgclass
+  ProgressUpdate = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("download.ProgressUpdate").msgclass
+  DownloadChunk = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("download.DownloadChunk").msgclass
 end

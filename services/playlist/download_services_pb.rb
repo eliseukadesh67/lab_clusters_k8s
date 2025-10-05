@@ -14,8 +14,8 @@ module Download
       self.unmarshal_class_method = :decode
       self.service_name = 'download.DownloadService'
 
-      rpc :GetVideoMetadata, ::Download::DownloadRequest, ::Download::VideoMetadataResponse
-      rpc :DownloadVideo, ::Download::DownloadRequest, stream(::Download::DownloadStatusResponse)
+      rpc :GetMetadata, ::Download::Request, ::Download::Metadata
+      rpc :GetFile, ::Download::Request, stream(::Download::DownloadChunk)
     end
 
     Stub = Service.rpc_stub_class

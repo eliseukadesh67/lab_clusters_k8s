@@ -4,49 +4,52 @@ import yt_dlp
 from concurrent import futures
 import threading
 import queue
+import time
 import download_pb2
 import download_pb2_grpc
 
 class DownloadService(download_pb2_grpc.DownloadServiceServicer):
 
-    def GetVideoMetadata(self, request, context):
-        """
-        Extrai metadados de um vídeo sem baixá-lo.
-        """
-        ydl_opts = {
-            'quiet': True,
-            'no_warnings': True,
-        }
-        
+    def GetMetadata(self, request, context):
+        start = time.time()
+        ydl_opts = {'quiet': True, 'no_warnings': True}
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info_dict = ydl.extract_info(request.video_url, download=False)
+                info_dict = ydl.extract_info(request.url, download=False)
             title = info_dict.get('title', 'N/A')
-            duration = int(info_dict.get('duration', 0))
+            duration = int(info_dict.get('duration', 0) or 0)
             thumbnail_url = info_dict.get('thumbnail', '')
-            
-            return download_pb2.VideoMetadataResponse(
+            total_bytes = int(info_dict.get('filesize') or info_dict.get('filesize_approx') or 0)
+            elapsed = time.time() - start
+            print(f"[GetMetadata] extraction time: {elapsed:.3f}s for url: {request.url}")
+            try:
+                context.set_trailing_metadata((('extraction-time-seconds', f"{elapsed:.3f}"),))
+            except Exception:
+                pass
+            return download_pb2.Metadata(
                 title=title,
                 duration=duration,
-                thumbnail_url=thumbnail_url
+                thumbnail_url=thumbnail_url,
+                total_bytes=total_bytes
             )
         except Exception as e:
             context.set_code(grpc.StatusCode.NOT_FOUND)
             context.set_details(f"Não foi possível extrair metadados: {e}")
-            return download_pb2.VideoMetadataResponse()
-    
-    def DownloadVideo(self, request, context):
+            return download_pb2.Metadata()
+
+    def GetFile(self, request, context):
         progress_queue = queue.Queue()
 
         def progress_hook(d):
-            if d['status'] == 'downloading':
+            status = d.get('status')
+            if status == 'downloading':
                 try:
-                    total_bytes = d.get('total_bytes') or d.get('total_bytes_estimate')
-                    if total_bytes:
-                        downloaded_bytes = d.get('downloaded_bytes', 0)
-                        percentage = (downloaded_bytes / total_bytes) * 100
-                        progress_queue.put(download_pb2.DownloadStatusResponse(progress_percentage=percentage))
-                except (TypeError, ZeroDivisionError):
+                    total_bytes = d.get('total_bytes') or d.get('total_bytes_estimate') or 0
+                    downloaded_bytes = d.get('downloaded_bytes') or d.get('tmpfilesize') or 0
+                    progress_queue.put(download_pb2.DownloadChunk(
+                        progress=download_pb2.ProgressUpdate(bytes_downloaded=int(downloaded_bytes))
+                    ))
+                except (TypeError, ValueError):
                     pass
 
         ydl_opts = {
@@ -62,16 +65,18 @@ class DownloadService(download_pb2_grpc.DownloadServiceServicer):
         def download_thread_target():
             try:
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    ydl.download([request.video_url])
-                final_msg = f"Download de '{request.video_url}' concluído com sucesso."
-                progress_queue.put(download_pb2.DownloadStatusResponse(final_message=final_msg))
-            except Exception as e:
-                error_msg = f"Erro ao baixar '{request.video_url}': {e}"
-                progress_queue.put(download_pb2.DownloadStatusResponse(error_message=error_msg))
+                    ydl.download([request.url])
+                progress_queue.put(download_pb2.DownloadChunk(
+                    progress=download_pb2.ProgressUpdate(bytes_downloaded=-1)
+                ))
+            except Exception:
+                progress_queue.put(download_pb2.DownloadChunk(
+                    progress=download_pb2.ProgressUpdate(bytes_downloaded=-2)
+                ))
             finally:
                 progress_queue.put(None)
 
-        thread = threading.Thread(target=download_thread_target)
+        thread = threading.Thread(target=download_thread_target, daemon=True)
         thread.start()
 
         while True:
@@ -86,7 +91,6 @@ def serve():
     port = '50052'
     server.add_insecure_port(f'[::]:{port}')
     server.start()
-    
     try:
         server.wait_for_termination()
     except KeyboardInterrupt:

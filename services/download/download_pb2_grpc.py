@@ -34,28 +34,28 @@ class DownloadServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.GetVideoMetadata = channel.unary_unary(
-                '/download.DownloadService/GetVideoMetadata',
-                request_serializer=download__pb2.DownloadRequest.SerializeToString,
-                response_deserializer=download__pb2.VideoMetadataResponse.FromString,
+        self.GetMetadata = channel.unary_unary(
+                '/download.DownloadService/GetMetadata',
+                request_serializer=download__pb2.Request.SerializeToString,
+                response_deserializer=download__pb2.Metadata.FromString,
                 _registered_method=True)
-        self.DownloadVideo = channel.unary_stream(
-                '/download.DownloadService/DownloadVideo',
-                request_serializer=download__pb2.DownloadRequest.SerializeToString,
-                response_deserializer=download__pb2.DownloadStatusResponse.FromString,
+        self.GetFile = channel.unary_stream(
+                '/download.DownloadService/GetFile',
+                request_serializer=download__pb2.Request.SerializeToString,
+                response_deserializer=download__pb2.DownloadChunk.FromString,
                 _registered_method=True)
 
 
 class DownloadServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def GetVideoMetadata(self, request, context):
+    def GetMetadata(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def DownloadVideo(self, request, context):
+    def GetFile(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -64,15 +64,15 @@ class DownloadServiceServicer(object):
 
 def add_DownloadServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'GetVideoMetadata': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetVideoMetadata,
-                    request_deserializer=download__pb2.DownloadRequest.FromString,
-                    response_serializer=download__pb2.VideoMetadataResponse.SerializeToString,
+            'GetMetadata': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetMetadata,
+                    request_deserializer=download__pb2.Request.FromString,
+                    response_serializer=download__pb2.Metadata.SerializeToString,
             ),
-            'DownloadVideo': grpc.unary_stream_rpc_method_handler(
-                    servicer.DownloadVideo,
-                    request_deserializer=download__pb2.DownloadRequest.FromString,
-                    response_serializer=download__pb2.DownloadStatusResponse.SerializeToString,
+            'GetFile': grpc.unary_stream_rpc_method_handler(
+                    servicer.GetFile,
+                    request_deserializer=download__pb2.Request.FromString,
+                    response_serializer=download__pb2.DownloadChunk.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -86,7 +86,7 @@ class DownloadService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def GetVideoMetadata(request,
+    def GetMetadata(request,
             target,
             options=(),
             channel_credentials=None,
@@ -99,9 +99,9 @@ class DownloadService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/download.DownloadService/GetVideoMetadata',
-            download__pb2.DownloadRequest.SerializeToString,
-            download__pb2.VideoMetadataResponse.FromString,
+            '/download.DownloadService/GetMetadata',
+            download__pb2.Request.SerializeToString,
+            download__pb2.Metadata.FromString,
             options,
             channel_credentials,
             insecure,
@@ -113,7 +113,7 @@ class DownloadService(object):
             _registered_method=True)
 
     @staticmethod
-    def DownloadVideo(request,
+    def GetFile(request,
             target,
             options=(),
             channel_credentials=None,
@@ -126,9 +126,9 @@ class DownloadService(object):
         return grpc.experimental.unary_stream(
             request,
             target,
-            '/download.DownloadService/DownloadVideo',
-            download__pb2.DownloadRequest.SerializeToString,
-            download__pb2.DownloadStatusResponse.FromString,
+            '/download.DownloadService/GetFile',
+            download__pb2.Request.SerializeToString,
+            download__pb2.DownloadChunk.FromString,
             options,
             channel_credentials,
             insecure,

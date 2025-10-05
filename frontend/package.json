@@ -1,0 +1,20 @@
+{
+  "name": "cassettetube",
+  "version": "1.0.0",
+  "description": "Downloader de vídeos do YouTube com gerenciamento de playlists - tema fita cassete",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["youtube", "downloader", "playlist", "cassette", "video"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.12.2",
+    "dotenv": "^17.2.3",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0"
+  }
+}

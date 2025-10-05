@@ -6,7 +6,9 @@ require_relative 'playlist_services_pb'
 require_relative 'download_pb'
 require_relative 'download_services_pb'
 
-DOWNLOAD_SERVER_ADDR = 'localhost:50052'
+$stdout.sync = true
+
+DOWNLOAD_SERVER_ADDR = 'download-service:50052'
 
 module Model
   Playlist = Struct.new(:id, :name, :videos, keyword_init: true)

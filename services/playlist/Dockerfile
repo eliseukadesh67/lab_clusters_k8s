@@ -24,4 +24,4 @@ COPY . .
 EXPOSE 50051
 EXPOSE 5001
 
-CMD ["bundle", "exec" , "ruby" "-I", "." ,"playlist_server.rb"]
+CMD ["bundle", "exec" , "ruby", "-I", "." ,"playlist_server.rb"]

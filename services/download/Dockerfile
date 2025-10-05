@@ -2,6 +2,11 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# Atualiza os pacotes e instala o ffmpeg
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copia o arquivo de dependências do Python a partir da subpasta 'playlist-service'
 COPY requirements.txt .
 

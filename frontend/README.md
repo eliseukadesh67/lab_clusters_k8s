@@ -213,7 +213,7 @@ onclick="return confirm('Excluir esta playlist?')"
 
 ## Compatibilidade
 
-### 23. **Browser Support**
+### 17. **Browser Support**
 - **Modernos**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
 - **Tecnologias**: CSS Grid, Flexbox, Custom Properties
 - **Fallbacks**: Graceful degradation via Bootstrap

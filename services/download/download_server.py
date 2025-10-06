@@ -7,6 +7,16 @@ import queue
 import time
 import download_pb2
 import download_pb2_grpc
+import logging
+
+logging.basicConfig(
+    level=logging.INFO, 
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+# Cria o diretório de downloads se não existir
+if not os.path.exists('downloads'):
+    os.makedirs('downloads')
 
 class DownloadThreadError(Exception):
     pass
@@ -24,7 +34,7 @@ class DownloadService(download_pb2_grpc.DownloadServiceServicer):
             thumbnail_url = info_dict.get('thumbnail', '')
             total_bytes = int(info_dict.get('filesize') or info_dict.get('filesize_approx') or 0)
             elapsed = time.time() - start
-            print(f"[GetMetadata] extraction time: {elapsed:.3f}s for url: {request.url}")
+            logging.info(f"[GetMetadata] extraction time: {elapsed:.3f}s for url: {request.url}")
             try:
                 context.set_trailing_metadata((('extraction-time-seconds', f"{elapsed:.3f}"),))
             except Exception:
@@ -43,19 +53,24 @@ class DownloadService(download_pb2_grpc.DownloadServiceServicer):
     def GetFile(self, request, context):
         progress_queue = queue.Queue()
 
+        # --- MUDANÇA 1: O hook agora também pega o total de bytes ---
         def progress_hook(d):
-            status = d.get('status')
-            if status == 'downloading':
+            if d['status'] == 'downloading':
                 try:
-                    downloaded_bytes = d.get('downloaded_bytes') or d.get('tmpfilesize') or 0
+                    downloaded_bytes = d.get('downloaded_bytes', 0)
+                    total_bytes = d.get('total_bytes') or d.get('total_bytes_estimate', 0)
+                    
                     progress_queue.put(download_pb2.DownloadChunk(
-                        progress=download_pb2.ProgressUpdate(bytes_downloaded=int(downloaded_bytes))
+                        progress=download_pb2.ProgressUpdate(
+                            bytes_downloaded=int(downloaded_bytes),
+                            total_bytes=int(total_bytes)
+                        )
                     ))
                 except (TypeError, ValueError):
                     pass
 
         ydl_opts = {
-            'outtmpl': os.path.join("downloads", '%(title)s.%(ext)s'),
+            'outtmpl': os.path.join("downloads", '%(id)s.%(ext)s'), # Usar ID para nome de arquivo previsível
             'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best/bestvideo+bestaudio',
             'merge_output_format': 'mp4',
             'progress_hooks': [progress_hook],
@@ -64,20 +79,42 @@ class DownloadService(download_pb2_grpc.DownloadServiceServicer):
             'no_warnings': True,
         }
         
+        # --- MUDANÇA 2: A lógica da thread foi reestruturada ---
         def download_thread_target():
+            filepath = None
             try:
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    print(f"[yt-dlp] Iniciando download para: {request.url}")
-                    ydl.download([request.url])
-                # Sinal de sucesso
-                progress_queue.put(download_pb2.DownloadChunk(
-                    progress=download_pb2.ProgressUpdate(bytes_downloaded=-1)
-                ))
+                    logging.info(f"[yt-dlp] Iniciando download para: {request.url}")
+                    # Extrai informações para obter o nome do arquivo final
+                    info = ydl.extract_info(request.url, download=True)
+                    filepath = ydl.prepare_filename(info)
+                    
+                logging.info(f"[yt-dlp] Download concluído. Arquivo: {filepath}")
+                logging.info(f"[gRPC] Iniciando streaming do arquivo para o cliente.")
+
+                # Agora, envia o arquivo em pedaços (chunks)
+                chunk_size = 1024 * 1024  # 1 MB
+                with open(filepath, 'rb') as f:
+                    while True:
+                        chunk_data = f.read(chunk_size)
+                        if not chunk_data:
+                            break # Fim do arquivo
+                        # Coloca o pedaço de dados do arquivo na fila
+                        progress_queue.put(download_pb2.DownloadChunk(data=chunk_data))
+
+                logging.info(f"[gRPC] Streaming concluído.")
+
             except Exception as e:
-                # --- MUDANÇA 1: Colocar o objeto de erro na fila ---
-                print(f"[yt-dlp] Erro durante o download: {e}")
-                progress_queue.put(DownloadThreadError(f"Falha no download com yt-dlp: {e}"))
+                logging.info(f"[yt-dlp] Erro durante o processo: {e}")
+                progress_queue.put(DownloadThreadError(f"Falha no processo: {e}"))
             finally:
+                # Garante que o arquivo seja deletado, mesmo se ocorrer um erro
+                if filepath and os.path.exists(filepath):
+                    try:
+                        os.remove(filepath)
+                        logging.info(f"[System] Arquivo temporário removido: {filepath}")
+                    except OSError as e:
+                        logging.info(f"Erro ao remover arquivo {filepath}: {e}")
                 # Sinaliza que a thread terminou
                 progress_queue.put(None)
 
@@ -89,15 +126,12 @@ class DownloadService(download_pb2_grpc.DownloadServiceServicer):
             if item is None:
                 break
             
-            # --- MUDANÇA 2: Verificar se o item é um erro e levantá-lo ---
-            # Isso fará com que o gRPC encerre a chamada com um status de erro
             if isinstance(item, DownloadThreadError):
                 context.set_code(grpc.StatusCode.INTERNAL)
                 context.set_details(str(item))
-                # Levantar a exceção interrompe o 'yield' e finaliza o RPC com erro
                 raise item
 
-            # Se não for um erro, envia o chunk de dados normalmente
+            # Envia o item (seja progresso ou chunk de dados) para o cliente
             yield item
 
 def serve():
@@ -106,6 +140,7 @@ def serve():
     port = '50052'
     server.add_insecure_port(f'[::]:{port}')
     server.start()
+    logging.info(f"✅ Servidor gRPC rodando na porta {port}")
     try:
         server.wait_for_termination()
     except KeyboardInterrupt:

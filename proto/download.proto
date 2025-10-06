@@ -20,6 +20,7 @@ message Metadata {
 
 message ProgressUpdate {
    int64 bytes_downloaded = 1;
+   int64 total_bytes = 2;
 }
 
 message DownloadChunk {

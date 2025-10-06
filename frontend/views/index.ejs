@@ -7,12 +7,48 @@
     <div class="card my-4">
         <div class="card-body">
             <h5 class="card-title mb-3"><i class="fas fa-link me-2 text-primary"></i>URL do Vídeo</h5>
-            <form action="/downloads" method="POST" class="d-flex gap-2">
-                <input type="url" name="url" class="form-control" placeholder="https://www.youtube.com/watch?v=..." required>
-                <button type="submit" class="btn btn-success px-4" id="downloadButton">
+            <form id="downloadForm" class="d-flex gap-2">
+                <input type="url" id="videoUrl" name="url" class="form-control" placeholder="https://www.youtube.com/watch?v=..." required>
+                <button type="submit" id="downloadBtn" class="btn btn-success px-4">
                     <i class="fas fa-download me-2"></i>Baixar
                 </button>
             </form>
+        </div>
+    </div>
+
+    <!-- Progress Card -->
+    <div id="progressCard" class="card my-4 d-none">
+        <div class="card-body">
+            <h5 class="card-title mb-3"><i class="fas fa-spinner fa-spin me-2 text-primary"></i>Processando Download</h5>
+            <div class="progress mb-3" style="height: 25px;">
+                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                     role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                    0%
+                </div>
+            </div>
+            <div id="progressText" class="text-muted small">Iniciando download...</div>
+        </div>
+    </div>
+
+    <!-- Success Card -->
+    <div id="successCard" class="card my-4 d-none border-success">
+        <div class="card-body text-center">
+            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+            <h5 class="card-title text-success">Download Concluído!</h5>
+            <p class="card-text text-muted">O download do arquivo foi iniciado automaticamente.</p>
+            <small class="text-muted">Se o download não iniciou, verifique as configurações do seu navegador.</small>
+        </div>
+    </div>
+
+    <!-- Error Card -->
+    <div id="errorCard" class="card my-4 d-none border-danger">
+        <div class="card-body text-center">
+            <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+            <h5 class="card-title text-danger">Erro no Download</h5>
+            <p id="errorMessage" class="card-text text-muted">Ocorreu um erro durante o processo.</p>
+            <button onclick="resetForm()" class="btn btn-outline-secondary">
+                <i class="fas fa-redo me-2"></i>Tentar Novamente
+            </button>
         </div>
     </div>
 
@@ -21,25 +57,143 @@
             <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
         </div>
     <% } %>
-
-    <div id="status-message" class="mt-3 text-info" style="display: none;">
-        <i class="fas fa-spinner fa-spin me-2"></i>Iniciando o download... Por favor, aguarde.
-    </div>
 </div>
 
-<%- include('partials/footer') %>
-
 <script>
-    document.getElementById('downloadButton').addEventListener('click', function() {
-        const urlInput = document.querySelector('input[name="url"]');
-        if (urlInput.checkValidity()) { // Verifica se a URL é válida antes de mostrar a mensagem
-            document.getElementById('status-message').style.display = 'block';
-            this.disabled = true; // Desabilita o botão para evitar cliques múltiplos
-            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processando...';
-        }
+    let eventSource = null;
+
+    document.getElementById('downloadForm').addEventListener('submit', function(e) {
+        console.log("click");
+        e.preventDefault();
+
+        const url = document.getElementById('videoUrl').value;
+        if (!url) return;
+
+        startDownload(url);
     });
 
-    <% if (error) { %>
-        document.getElementById('status-message').style.display = 'none'; // Esconde a mensagem de "processando" se já tem erro
-    <% } %>
+    async function startDownload(url) {
+        console.log("startDownload");
+        // Reset UI
+        resetForm();
+
+        // Show progress card
+        document.getElementById('progressCard').classList.remove('d-none');
+        document.getElementById('downloadBtn').disabled = true;
+        document.getElementById('downloadBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processando...';
+
+        try {
+            const downloadApiUrl = `${API_URL}/api/downloads/?url=${encodeURIComponent(videoUrl)}`;
+
+            const response = await axios({
+                method: 'GET',
+                url: downloadApiUrl,
+                responseType: 'stream'
+            });
+
+            // Ouve os dados chegando da API
+            response.data.on('data', (chunk) => {
+                const dataString = chunk.toString();
+                const lines = dataString.split('\n');
+
+                lines.forEach(line => {
+                    if (line.startsWith('data:')) {
+                        try {
+                            // Parse do JSON para verificar o tipo
+                            const jsonData = JSON.parse(line.substring(5)); // Remove 'data:'
+
+                            if (jsonData.type === 'completed' && jsonData.downloadUrl) {
+                                // Converte URL local para URL da API externa
+                                console.log('baixando arquivo');
+
+                                baixarArquivoCliente(jsonData.downloadUrl, "file.mp4");
+
+                            } else {
+                                updateProgress(jsonData.bytes_downloaded, jsonData.total_bytes);
+                            }
+                        } catch (parseError) {
+                            // Se não conseguir fazer parse, repassa a linha original
+                            console.log('parse error');
+                        }
+                    }
+                });
+            });
+
+            response.data.on('end', () => {
+                console.log('Stream da API finalizado.');
+            });
+
+            response.data.on('error', (err) => {
+                console.error('Erro no stream da API:', err);
+            });
+
+        } catch (error) {
+            console.error('Erro ao conectar com a API de download:', error.message);
+        }
+    }
+
+    function updateProgress(downloaded, total) {
+        const percentage = Math.round((downloaded / total) * 100);
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+
+        progressBar.style.width = percentage + '%';
+        progressBar.setAttribute('aria-valuenow', percentage);
+        progressBar.textContent = percentage + '%';
+
+        const downloadedMB = (downloaded / (1024 * 1024)).toFixed(1);
+        const totalMB = (total / (1024 * 1024)).toFixed(1);
+        progressText.textContent = `${downloadedMB} MB de ${totalMB} MB baixados`;
+    }
+
+    function downloadCompleted(downloadUrl) {
+
+        // Hide progress card
+        document.getElementById('progressCard').classList.add('d-none');
+
+        // Show success card
+        document.getElementById('successCard').classList.remove('d-none');
+
+        // Iniciar download automaticamente
+        window.location.href = downloadUrl;
+
+        // Reset button
+        resetButton();
+    }
+
+    function showError(message) {
+
+        // Hide progress card
+        document.getElementById('progressCard').classList.add('d-none');
+
+        // Show error card
+        document.getElementById('errorCard').classList.remove('d-none');
+        document.getElementById('errorMessage').textContent = message;
+
+        // Reset button
+        resetButton();
+    }
+
+    function resetForm() {
+        // Hide all cards
+        document.getElementById('progressCard').classList.add('d-none');
+        document.getElementById('successCard').classList.add('d-none');
+        document.getElementById('errorCard').classList.add('d-none');
+
+        // Reset progress
+        const progressBar = document.getElementById('progressBar');
+        progressBar.style.width = '0%';
+        progressBar.setAttribute('aria-valuenow', 0);
+        progressBar.textContent = '0%';
+        document.getElementById('progressText').textContent = 'Iniciando download...';
+
+        resetButton();
+    }
+
+    function resetButton() {
+        document.getElementById('downloadBtn').disabled = false;
+        document.getElementById('downloadBtn').innerHTML = '<i class="fas fa-download me-2"></i>Baixar';
+    }
 </script>
+
+<%- include('partials/footer') %>

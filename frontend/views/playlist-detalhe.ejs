@@ -1,293 +1,346 @@
 <%- include('partials/header') %>
 
-<div class="container mt-4">
+  <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        
-        <h1 id="view-mode-<%= playlist.id %>" class="mb-0"><%= playlist.name %></h1>
-    
-        <form id="edit-mode-<%= playlist.id %>" action="/playlists/edit/<%= playlist.id %>" method="POST" class="d-flex flex-grow-1 d-none">
-            <input type="text" name="name" class="form-control form-control-lg me-2" value="<%= playlist.name %>" required>
-            <button type="submit" class="btn btn-success">Salvar</button>
-            <button type="button" class="btn btn-secondary ms-2" onclick="toggleEdit('<%= playlist.id %>')">Cancelar</button>
-        </form>
-    
-        <button id="edit-button-<%= playlist.id %>" type="button" class="btn btn-secondary ms-3" onclick="toggleEdit('<%= playlist.id %>')">
-            <i class="fas fa-pencil-alt me-1"></i>Editar Nome
-        </button>
-    
+
+      <h1 id="view-mode-<%= playlist.id %>" class="mb-0">
+        <%= playlist.name %>
+      </h1>
+
+      <form id="edit-mode-<%= playlist.id %>" action="/playlists/edit/<%= playlist.id %>" method="POST"
+        class="d-flex flex-grow-1 d-none">
+        <input type="text" name="name" class="form-control form-control-lg me-2" value="<%= playlist.name %>" required>
+        <button type="submit" class="btn btn-success">Salvar</button>
+        <button type="button" class="btn btn-secondary ms-2"
+          onclick="toggleEdit('<%= playlist.id %>')">Cancelar</button>
+      </form>
+
+      <button id="edit-button-<%= playlist.id %>" type="button" class="btn btn-secondary ms-3"
+        onclick="toggleEdit('<%= playlist.id %>')">
+        <i class="fas fa-pencil-alt me-1"></i>Editar Nome
+      </button>
+
     </div>
 
     <div class="card my-4">
-        <div class="card-body">
-            <h5 class="card-title mb-3"><i class="fas fa-plus me-2 text-primary"></i>Adicionar Vídeo</h5>
-            <form action="/videos/<%= playlist.id %>" method="POST" class="d-flex gap-2">
-                <input type="url" name="video_url" class="form-control" placeholder="URL do YouTube" required>
-                <button type="submit" class="btn btn-primary px-4">
-                    <i class="fas fa-plus me-2"></i>Adicionar
-                </button>
-            </form>
-        </div>
+      <div class="card-body">
+        <h5 class="card-title mb-3"><i class="fas fa-plus me-2 text-primary"></i>Adicionar Vídeo</h5>
+        <form action="/videos/<%= playlist.id %>" method="POST" class="d-flex gap-2">
+          <input type="url" name="video_url" class="form-control" placeholder="URL do YouTube" required>
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="fas fa-plus me-2"></i>Adicionar
+          </button>
+        </form>
+      </div>
     </div>
 
     <h2><i class="fas fa-video me-2 text-secondary"></i>Vídeos</h2>
     <div class="list-group">
-        <% if (playlist.videos && playlist.videos.length > 0) { %>
-            <% playlist.videos.forEach(video => { %>
-                <div class="list-group-item d-flex justify-content-between align-items-center p-3">
-                    
-                    <div class="d-flex align-items-center flex-grow-1">
-                        <a href="<%= video.url %>" target="_blank" rel="noopener noreferrer" class="me-3">
-                            <img src="<%= video.thumbnail_url %>" alt="<%= video.title %>" 
-                                 class="rounded shadow-sm" 
-                                 style="width: 120px; height: 68px; object-fit: cover;">
-                        </a>
-                        <div class="flex-grow-1">
-                            <a href="<%= video.url %>" target="_blank" rel="noopener noreferrer" 
-                               class="fw-bold text-decoration-none text-dark d-block mb-1">
-                                <%= video.title %>
-                            </a>
-                            <%
-                                const minutes = Math.floor(video.duration / 60);
-                                const seconds = video.duration % 60;
-                                const formattedDuration = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                            %>
-                            <small class="text-muted">
-                                <i class="fas fa-clock me-1"></i><%= formattedDuration %>
-                            </small>
-                        </div>
-                    </div>
+      <% if (playlist.videos && playlist.videos.length> 0) { %>
+        <% playlist.videos.forEach(video=> { %>
+          <div class="list-group-item d-flex justify-content-between align-items-center p-3">
 
-                    <div class="ms-3 d-flex align-items-center gap-2">
-                        <button onclick="startVideoDownload('<%= video.url %>', '<%= video.id %>')" class="btn btn-sm btn-success" id="downloadBtn-<%= video.id %>">
-                            <i class="fas fa-download me-1"></i>Download
-                        </button>
-                        <form action="/videos/delete/<%= video.id %>" method="POST" class="m-0">
-                            <input type="hidden" name="playlistId" value="<%= playlist.id %>">
-                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Remover este vídeo?')">
-                                <i class="fas fa-trash me-1"></i>Remover
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            <% }) %>
-        <% } else { %>
-            <div class="list-group-item text-center text-muted py-5">
+            <div class="d-flex align-items-center flex-grow-1">
+              <a href="<%= video.url %>" target="_blank" rel="noopener noreferrer" class="me-3">
+                <img src="<%= video.thumbnail_url %>" alt="<%= video.title %>" class="rounded shadow-sm"
+                  style="width: 120px; height: 68px; object-fit: cover;">
+              </a>
+              <div class="flex-grow-1">
+                <a href="<%= video.url %>" target="_blank" rel="noopener noreferrer"
+                  class="fw-bold text-decoration-none text-dark d-block mb-1">
+                  <%= video.title %>
+                </a>
+                <% const minutes=Math.floor(video.duration / 60); const seconds=video.duration % 60; const
+                  formattedDuration=`${minutes.toString().padStart(2, '0' )}:${seconds.toString().padStart(2, '0' )}`;
+                  %>
+                  <small class="text-muted">
+                    <i class="fas fa-clock me-1"></i>
+                    <%= formattedDuration %>
+                  </small>
+              </div>
+            </div>
+
+            <div class="ms-3 d-flex align-items-center gap-2">
+              <button onclick="startVideoDownload('<%= video.url %>', '<%= video.id %>')" class="btn btn-sm btn-success"
+                id="downloadBtn-<%= video.id %>">
+                <i class="fas fa-download me-1"></i>Download
+              </button>
+              <form action="/videos/delete/<%= video.id %>" method="POST" class="m-0">
+                <input type="hidden" name="playlistId" value="<%= playlist.id %>">
+                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Remover este vídeo?')">
+                  <i class="fas fa-trash me-1"></i>Remover
+                </button>
+              </form>
+            </div>
+          </div>
+          <% }) %>
+            <% } else { %>
+              <div class="list-group-item text-center text-muted py-5">
                 <i class="fas fa-video fa-3x mb-3 d-block"></i>
                 <p class="mb-0">Nenhum vídeo nesta playlist.</p>
                 <small>Adicione URLs do YouTube acima.</small>
-            </div>
-        <% } %>
+              </div>
+              <% } %>
     </div>
-</div>
+  </div>
 
-<!-- Modal de Progresso -->
-<div class="modal fade" id="downloadModal" tabindex="-1" aria-labelledby="downloadModalLabel" aria-hidden="true">
+  <!-- Modal de Progresso -->
+  <div class="modal fade" id="downloadModal" tabindex="-1" aria-labelledby="downloadModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="downloadModalLabel">
-                    <i class="fas fa-spinner fa-spin me-2 text-primary"></i>Processando Download
-                </h5>
-            </div>
-            <div class="modal-body">
-                <div class="progress mb-3" style="height: 25px;">
-                    <div id="modalProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
-                         role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                        0%
-                    </div>
-                </div>
-                <div id="modalProgressText" class="text-muted small text-center">Iniciando download...</div>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="downloadModalLabel">
+            <i class="fas fa-spinner fa-spin me-2 text-primary"></i>Processando Download
+          </h5>
         </div>
+        <div class="modal-body">
+          <div class="progress mb-3" style="height: 25px;">
+            <div id="modalProgressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+              role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+              0%
+            </div>
+          </div>
+          <div id="modalProgressText" class="text-muted small text-center">Iniciando download...</div>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
 
-<!-- Modal de Sucesso -->
-<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+  <!-- Modal de Sucesso -->
+  <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-success">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="successModalLabel">
-                    <i class="fas fa-check-circle me-2"></i>Download Concluído!
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center">
-                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-                <p class="mb-3">O download do arquivo foi iniciado automaticamente.</p>
-                <small class="text-muted">Se o download não iniciou, verifique as configurações do seu navegador.</small>
-            </div>
+      <div class="modal-content border-success">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="successModalLabel">
+            <i class="fas fa-check-circle me-2"></i>Download Concluído!
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
+        <div class="modal-body text-center">
+          <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+          <p class="mb-3">O download do arquivo foi iniciado automaticamente.</p>
+          <small class="text-muted">Se o download não iniciou, verifique as configurações do seu navegador.</small>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
 
-<!-- Modal de Erro -->
-<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+  <!-- Modal de Erro -->
+  <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-danger">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="errorModalLabel">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Erro no Download
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center">
-                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
-                <p id="modalErrorMessage" class="mb-3">Ocorreu um erro durante o processo.</p>
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>Fechar
-                </button>
-            </div>
+      <div class="modal-content border-danger">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title" id="errorModalLabel">
+            <i class="fas fa-exclamation-triangle me-2"></i>Erro no Download
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
+        <div class="modal-body text-center">
+          <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+          <p id="modalErrorMessage" class="mb-3">Ocorreu um erro durante o processo.</p>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Fechar
+          </button>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
 
-<script>
+  <script>
+    const GATEWAY_BASE_URL = 'http://192.168.49.2';
     let currentEventSource = null;
     let currentVideoId = null;
+    let downloadIsComplete = false;
 
     function toggleEdit(playlistId) {
-        const viewMode = document.getElementById(`view-mode-${playlistId}`);
-        const editMode = document.getElementById(`edit-mode-${playlistId}`);
-        const editButton = document.getElementById(`edit-button-${playlistId}`);
+      const viewMode = document.getElementById(`view-mode-${playlistId}`);
+      const editMode = document.getElementById(`edit-mode-${playlistId}`);
+      const editButton = document.getElementById(`edit-button-${playlistId}`);
 
-        viewMode.classList.toggle('d-none');
-        editMode.classList.toggle('d-none');
-        editButton.classList.toggle('d-none');
+      viewMode.classList.toggle('d-none');
+      editMode.classList.toggle('d-none');
+      editButton.classList.toggle('d-none');
     }
 
     function startVideoDownload(videoUrl, videoId) {
-        currentVideoId = videoId;
-        
-        // Reset modals
-        hideAllModals();
-        
-        // Update button state
-        const btn = document.getElementById(`downloadBtn-${videoId}`);
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processando...';
-        
-        // Show progress modal
-        const downloadModal = new bootstrap.Modal(document.getElementById('downloadModal'));
-        downloadModal.show();
-        
-        // Reset progress
-        resetProgress();
-        
-        // Start SSE connection
-        currentEventSource = new EventSource(`/downloads/status?url=${encodeURIComponent(videoUrl)}`);
-        
-        currentEventSource.onmessage = function(event) {
-            try {
-                const data = JSON.parse(event.data);
-                
-                if (data.type === 'progress') {
-                    updateModalProgress(data.bytes_downloaded, data.total_bytes);
-                } else if (data.type === 'completed') {
-                    downloadCompleted(data.downloadUrl);
-                } else if (data.type === 'error') {
-                    showModalError(data.message || 'Erro desconhecido');
-                }
-            } catch (error) {
-                console.error('Erro ao processar dados SSE:', error);
-                showModalError('Erro ao processar resposta do servidor');
-            }
-        };
-        
-        currentEventSource.onerror = function(error) {
-            console.error('Erro na conexão SSE:', error);
-            showModalError('Erro de conexão com o servidor');
-        };
+      currentVideoId = videoId;
+      downloadIsComplete = false;
+
+      // Reset modals
+      hideAllModals();
+
+      // Update button state
+      const btn = document.getElementById(`downloadBtn-${videoId}`);
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processando...';
+
+      // Show progress modal
+      const downloadModal = new bootstrap.Modal(document.getElementById('downloadModal'));
+      downloadModal.show();
+
+      // Reset progress
+      resetProgress();
+
+      const sseUrl = `${GATEWAY_BASE_URL}/api/downloads?url=${encodeURIComponent(videoUrl)}`;
+      console.log("Conectando ao SSE em:", sseUrl);
+      currentEventSource = new EventSource(sseUrl);
+
+      currentEventSource.onmessage = function (event) {
+        try {
+          const data = JSON.parse(event.data);
+
+          if (data.type === 'progress') {
+            updateModalProgress(data.bytes_downloaded, data.total_bytes);
+          } else if (data.type === 'completed') {
+            downloadCompleted(data.downloadUrl);
+          } else if (data.type === 'error') {
+            showModalError(data.message || 'Erro desconhecido');
+          }
+        } catch (error) {
+          console.error('Erro ao processar dados SSE:', error);
+          showModalError('Erro ao processar resposta do servidor');
+        }
+      };
+
+      currentEventSource.onerror = function (error) {
+        console.error('Erro na conexão SSE:', error);
+        showModalError('Erro de conexão com o servidor');
+      };
     }
 
     function updateModalProgress(downloaded, total) {
-        const percentage = Math.round((downloaded / total) * 100);
-        const progressBar = document.getElementById('modalProgressBar');
-        const progressText = document.getElementById('modalProgressText');
-        
-        progressBar.style.width = percentage + '%';
-        progressBar.setAttribute('aria-valuenow', percentage);
-        progressBar.textContent = percentage + '%';
-        
-        const downloadedMB = (downloaded / (1024 * 1024)).toFixed(1);
-        const totalMB = (total / (1024 * 1024)).toFixed(1);
-        progressText.textContent = `${downloadedMB} MB de ${totalMB} MB baixados`;
+      const percentage = Math.round((downloaded / total) * 100);
+      const progressBar = document.getElementById('modalProgressBar');
+      const progressText = document.getElementById('modalProgressText');
+
+      progressBar.style.width = percentage + '%';
+      progressBar.setAttribute('aria-valuenow', percentage);
+      progressBar.textContent = percentage + '%';
+
+      const downloadedMB = (downloaded / (1024 * 1024)).toFixed(1);
+      const totalMB = (total / (1024 * 1024)).toFixed(1);
+      progressText.textContent = `${downloadedMB} MB de ${totalMB} MB baixados`;
     }
 
-    function downloadCompleted(downloadUrl) {
-        if (currentEventSource) {
-            currentEventSource.close();
-            currentEventSource = null;
+    async function downloadFile(url, suggestedFilename) {
+      try {
+        console.log("Iniciando download do arquivo final de:", url);
+        const response = await fetch(url, { method: 'GET' });
+
+        if (!response.ok) {
+          throw new Error(`Erro na requisição final: ${response.status} ${response.statusText}`);
         }
-        
-        // Hide progress modal
-        bootstrap.Modal.getInstance(document.getElementById('downloadModal')).hide();
-        
-        // Show success modal
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = suggestedFilename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+        console.log("Download solicitado com sucesso!");
+
+      } catch (error) {
+        console.error("Falha ao baixar o arquivo final:", error);
+        // Aqui, em vez de chamar showModalError, poderíamos mostrar
+        // o erro no modal de sucesso que já está aberto, ou abrir o de erro.
+        // Por simplicidade, vamos chamar o de erro.
+        hideAllModals(); // Esconde o modal de sucesso
+        showModalError(`Falha ao baixar o arquivo: ${error.message}`);
+      }
+    }
+
+    async function downloadCompleted(downloadUrl) {
+      downloadIsComplete = true;
+      if (currentEventSource) {
+        currentEventSource.close();
+        currentEventSource = null;
+      }
+
+      // Hide progress modal
+      bootstrap.Modal.getInstance(document.getElementById('downloadModal')).hide();
+
+      // Show success modal
+      const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+      successModal.show();
+
+      const fileId = downloadUrl.split('/file/')[1] || 'video.mp4';
+      const finalDownloadUrl = `${GATEWAY_BASE_URL}/${downloadUrl}`;
+
+      try {
+        // 1. TENTA a operação crítica primeiro
+        await downloadFile(finalDownloadUrl, fileId);
+
+        // 2. SOMENTE SE a linha acima NÃO FALHAR, mostre o sucesso
         const successModal = new bootstrap.Modal(document.getElementById('successModal'));
         successModal.show();
-        
-        // Iniciar download automaticamente
-        window.location.href = downloadUrl;
-        
-        // Reset button
+
+      } catch (error) {
+        // 3. Se a operação crítica falhar (dentro de downloadFile), mostre o erro
+        console.error("Falha durante a etapa final de download:", error);
+        // A função downloadFile já chama showError, mas podemos garantir aqui também.
+        showModalError(error.message || "Não foi possível iniciar o download do arquivo.");
+      } finally {
+        // 4. Independentemente de sucesso ou falha, resete o botão
         resetDownloadButton();
+      }
     }
 
     function showModalError(message) {
-        if (currentEventSource) {
-            currentEventSource.close();
-            currentEventSource = null;
-        }
-        
-        // Hide progress modal
-        bootstrap.Modal.getInstance(document.getElementById('downloadModal')).hide();
-        
-        // Show error modal
-        document.getElementById('modalErrorMessage').textContent = message;
-        const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-        errorModal.show();
-        
-        // Reset button
-        resetDownloadButton();
+      if (currentEventSource) {
+        currentEventSource.close();
+        currentEventSource = null;
+      }
+
+      // Hide progress modal
+      bootstrap.Modal.getInstance(document.getElementById('downloadModal')).hide();
+
+      // Show error modal
+      document.getElementById('modalErrorMessage').textContent = message;
+      const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+      errorModal.show();
+
+      // Reset button
+      resetDownloadButton();
     }
 
     function hideAllModals() {
-        const modals = ['downloadModal', 'successModal', 'errorModal'];
-        modals.forEach(modalId => {
-            const modalElement = document.getElementById(modalId);
-            const modalInstance = bootstrap.Modal.getInstance(modalElement);
-            if (modalInstance) {
-                modalInstance.hide();
-            }
-        });
+      const modals = ['downloadModal', 'successModal', 'errorModal'];
+      modals.forEach(modalId => {
+        const modalElement = document.getElementById(modalId);
+        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+        if (modalInstance) {
+          modalInstance.hide();
+        }
+      });
     }
 
     function resetProgress() {
-        const progressBar = document.getElementById('modalProgressBar');
-        const progressText = document.getElementById('modalProgressText');
-        
-        progressBar.style.width = '0%';
-        progressBar.setAttribute('aria-valuenow', 0);
-        progressBar.textContent = '0%';
-        progressText.textContent = 'Iniciando download...';
+      const progressBar = document.getElementById('modalProgressBar');
+      const progressText = document.getElementById('modalProgressText');
+
+      progressBar.style.width = '0%';
+      progressBar.setAttribute('aria-valuenow', 0);
+      progressBar.textContent = '0%';
+      progressText.textContent = 'Iniciando download...';
     }
 
     function resetDownloadButton() {
-        if (currentVideoId) {
-            const btn = document.getElementById(`downloadBtn-${currentVideoId}`);
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-download me-1"></i>Download';
-            currentVideoId = null;
-        }
+      if (currentVideoId) {
+        const btn = document.getElementById(`downloadBtn-${currentVideoId}`);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-download me-1"></i>Download';
+        currentVideoId = null;
+      }
     }
 
     // Clean up on page unload
-    window.addEventListener('beforeunload', function() {
-        if (currentEventSource) {
-            currentEventSource.close();
-        }
+    window.addEventListener('beforeunload', function () {
+      if (currentEventSource) {
+        currentEventSource.close();
+      }
     });
-</script>
+  </script>
 
-<%- include('partials/footer') %>
+  <%- include('partials/footer') %>

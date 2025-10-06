@@ -7,12 +7,48 @@
     <div class="card my-4">
         <div class="card-body">
             <h5 class="card-title mb-3"><i class="fas fa-link me-2 text-primary"></i>URL do Vídeo</h5>
-            <form action="/downloads" method="POST" class="d-flex gap-2">
-                <input type="url" name="url" class="form-control" placeholder="https://www.youtube.com/watch?v=..." required>
-                <button type="submit" class="btn btn-success px-4">
+            <form id="downloadForm" class="d-flex gap-2">
+                <input type="url" id="videoUrl" name="url" class="form-control" placeholder="https://www.youtube.com/watch?v=..." required>
+                <button type="submit" id="downloadBtn" class="btn btn-success px-4">
                     <i class="fas fa-download me-2"></i>Baixar
                 </button>
             </form>
+        </div>
+    </div>
+
+    <!-- Progress Card -->
+    <div id="progressCard" class="card my-4 d-none">
+        <div class="card-body">
+            <h5 class="card-title mb-3"><i class="fas fa-spinner fa-spin me-2 text-primary"></i>Processando Download</h5>
+            <div class="progress mb-3" style="height: 25px;">
+                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                     role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                    0%
+                </div>
+            </div>
+            <div id="progressText" class="text-muted small">Iniciando download...</div>
+        </div>
+    </div>
+
+    <!-- Success Card -->
+    <div id="successCard" class="card my-4 d-none border-success">
+        <div class="card-body text-center">
+            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+            <h5 class="card-title text-success">Download Concluído!</h5>
+            <p class="card-text text-muted">O download do arquivo foi iniciado automaticamente.</p>
+            <small class="text-muted">Se o download não iniciou, verifique as configurações do seu navegador.</small>
+        </div>
+    </div>
+
+    <!-- Error Card -->
+    <div id="errorCard" class="card my-4 d-none border-danger">
+        <div class="card-body text-center">
+            <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+            <h5 class="card-title text-danger">Erro no Download</h5>
+            <p id="errorMessage" class="card-text text-muted">Ocorreu um erro durante o processo.</p>
+            <button onclick="resetForm()" class="btn btn-outline-secondary">
+                <i class="fas fa-redo me-2"></i>Tentar Novamente
+            </button>
         </div>
     </div>
 
@@ -22,5 +58,165 @@
         </div>
     <% } %>
 </div>
+
+<script>
+  let eventSource = null;
+
+  const GATEWAY_BASE_URL = 'http://192.168.49.2';
+
+  let downloadIsComplete = false;
+
+  function resetForm() {
+
+      downloadIsComplete = false;
+      document.getElementById('progressCard').classList.add('d-none');
+      document.getElementById('successCard').classList.add('d-none');
+      document.getElementById('errorCard').classList.add('d-none');
+      const progressBar = document.getElementById('progressBar');
+      progressBar.style.width = '0%';
+      progressBar.setAttribute('aria-valuenow', 0);
+      progressBar.textContent = '0%';
+      document.getElementById('progressText').textContent = 'Iniciando download...';
+      document.getElementById('videoUrl').disabled = false;
+      resetButton();
+      if (eventSource) {
+          eventSource.close();
+          eventSource = null;
+      }
+  }
+
+  function updateProgress(downloaded, total) {
+      const percentage = Math.round((downloaded / total) * 100);
+      const progressBar = document.getElementById('progressBar');
+      const progressText = document.getElementById('progressText');
+      progressBar.style.width = percentage + '%';
+      progressBar.setAttribute('aria-valuenow', percentage);
+      progressBar.textContent = percentage + '%';
+      const downloadedMB = (downloaded / (1024 * 1024)).toFixed(1);
+      const totalMB = (total / (1024 * 1024)).toFixed(1);
+      progressText.textContent = `${downloadedMB} MB de ${totalMB} MB baixados`;
+  }
+
+  function showError(message) {
+      document.getElementById('progressCard').classList.add('d-none');
+      document.getElementById('successCard').classList.add('d-none');
+      document.getElementById('errorCard').classList.remove('d-none');
+      document.getElementById('errorMessage').textContent = message;
+      resetButton();
+      if (eventSource) {
+          eventSource.close();
+          eventSource = null;
+      }
+  }
+
+  function resetButton() {
+      document.getElementById('downloadBtn').disabled = false;
+      document.getElementById('downloadBtn').innerHTML = '<i class="fas fa-download me-2"></i>Baixar';
+  }
+
+  async function downloadFile(url, suggestedFilename) {
+      try {
+          console.log("Iniciando download do arquivo final de:", url);
+          const response = await fetch(url, { method: 'GET' });
+
+          if (!response.ok) {
+              throw new Error(`Erro na requisição final: ${response.status} ${response.statusText}`);
+          }
+          const blob = await response.blob();
+          const downloadUrl = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = suggestedFilename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(downloadUrl);
+          console.log("Download solicitado com sucesso!");
+      } catch (error) {
+          console.error("Falha ao baixar o arquivo final:", error);
+          showError(`Erro ao iniciar o download: ${error.message}`);
+      }
+  }
+
+  // --- Função chamada ao receber o evento 'completed' via SSE ---
+  async function downloadCompleted(downloadUrl, fileId) {
+      
+      console.log('Backend concluiu. Iniciando download no cliente do fileId:', fileId);
+      document.getElementById('progressCard').classList.add('d-none');
+      document.getElementById('successCard').classList.remove('d-none');
+
+      const finalDownloadUrl = `${GATEWAY_BASE_URL}/${downloadUrl}`;
+
+      await downloadFile(finalDownloadUrl, fileId);
+      
+      if (eventSource) {
+          eventSource.close();
+          eventSource = null;
+      }
+  }
+
+  // --- Event Listener do Formulário ---
+  document.getElementById('downloadForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const videoUrl = document.getElementById('videoUrl').value;
+      if (!videoUrl) {
+          showError("Por favor, insira uma URL válida.");
+          return;
+      }
+      startDownload(videoUrl);
+  });
+
+  // --- Função para iniciar a conexão SSE diretamente com o GATEWAY ---
+  function startDownload(videoUrl) {
+      console.log("Iniciando processo de download via SSE direto no gateway.");
+      resetForm();
+      
+      document.getElementById('progressCard').classList.remove('d-none');
+      document.getElementById('downloadBtn').disabled = true;
+      document.getElementById('downloadBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processando...';
+      
+      // Conecta o EventSource à rota SSE do seu GATEWAY
+      // A rota `/api/downloads` do seu gateway deve ser o endpoint SSE.
+      const sseUrl = `${GATEWAY_BASE_URL}/api/downloads?url=${encodeURIComponent(videoUrl)}`;
+      console.log("Conectando ao SSE em:", sseUrl);
+      eventSource = new EventSource(sseUrl);
+      
+      eventSource.onmessage = function(event) {
+          try {
+              const data = JSON.parse(event.data);
+              console.log("SSE Message:", data);
+              if (data.type === 'progress') {
+                  updateProgress(data.bytes_downloaded, data.total_bytes);
+              } else if (data.type === 'completed') {
+                  downloadIsComplete = true;
+                  const fileId = data.downloadUrl.split('/file/')[1];
+                  downloadCompleted(data.downloadUrl, fileId);
+              } else if (data.type === 'error') {
+                  showError(data.message || 'Erro desconhecido no SSE.');
+              }
+          } catch (error) {
+              console.error('Erro ao processar dados SSE:', error);
+              showError('Erro inesperado na comunicação com o servidor via SSE.');
+          }
+      };
+
+      eventSource.onerror = function(err) {
+          if (downloadIsComplete) {
+              console.log("Conexão SSE fechada pelo servidor após a conclusão. Isso é normal e esperado.");
+              if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+              }
+              return;
+          }
+          console.error('EventSource error:', err);
+          if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+          }
+          showError('Falha na conexão com o gateway. ⚠️ Verifique: 1. CORS no gateway. 2. Gateway está rodando e acessível. 3. Rota SSE (`/api/downloads`) está correta no gateway.');
+      };
+  }
+</script>
 
 <%- include('partials/footer') %>

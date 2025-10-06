@@ -1,15 +1,19 @@
 require('dotenv').config();
+
 const express = require('express');
 const axios = require('axios');
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT;
 
+const PROTOCOL= process.env.PROTOCOL
 const API_URL = process.env.API_URL;
 
 app.set('view engine', 'ejs');
 
 app.use(express.static('public')); // Para servir arquivos CSS e JS estáticos
 app.use(express.urlencoded({ extended: true })); // Para conseguir ler dados de formulários (req.body)
+
+axios.defaults.headers.common['x-communication-protocol'] = PROTOCOL;
 
 app.get('/', (req, res) => {
     res.render('index', { videoUrl: null, error: null });
@@ -18,7 +22,7 @@ app.get('/', (req, res) => {
 app.post('/playlists', async (req, res) => {
     try {
         const { name } = req.body;
-        await axios.post(`${API_URL}/playlists`, { name: name });
+        await axios.post(`${API_URL}/api/playlists`, { name: name });
         res.redirect('/playlists');
     } catch (error) {
         console.error(error);
@@ -28,9 +32,8 @@ app.post('/playlists', async (req, res) => {
 
 app.get('/playlists', async (req, res) => {
     try {
-        const response = await axios.get(`${API_URL}/playlists`);
-        
-        const playlistsParaTemplate = { items: response.data };
+        const response = await axios.get(`${API_URL}/api/playlists`);
+        const playlistsParaTemplate = { items: response.data.data.items };
         
         res.render('playlists', { playlists: playlistsParaTemplate });
     } catch (error) {
@@ -40,49 +43,16 @@ app.get('/playlists', async (req, res) => {
 });
 
 // Versão correta como documentado
-// app.get('/playlists/:id', async (req, res) => {
-//     try {
-//         const playlistId = req.params.id;
-
-//         const response = await axios.get(`${API_URL}/playlists/${playlistId}?_embed=videos`);
-
-//         res.render('playlist-detalhe', { playlist: response.data });
-//     } catch (error) {
-//         console.error(error);
-//         res.redirect('/playlists');
-//     }
-// });
-
-// Versão de teste para execução local do frontend
 app.get('/playlists/:id', async (req, res) => {
     try {
-        const playlistId = req.params.id;
-
-        console.log(`Buscando dados para a playlist: ${playlistId}`);
-
-        // --- INÍCIO DA SOLUÇÃO TEMPORÁRIA ---
-
-        const [playlistResponse, videosResponse] = await Promise.all([
-            // Chamada 1: Pega os dados básicos da playlist
-            axios.get(`${API_URL}/playlists/${playlistId}`),
-            // Chamada 2: Filtra e pega somente os vídeos com o playlist_id correspondente
-            axios.get(`${API_URL}/videos?playlist_id=${playlistId}`)
-        ]);
-
-        const playlist = playlistResponse.data;
-        const videos = videosResponse.data;
-
-        playlist.videos = videos;
-        
-        // --- FIM DA SOLUÇÃO TEMPORÁRIA ---
-        
-        res.render('playlist-detalhe', { playlist: playlist });
-
+        const playlistId = req.params.id
+        const response = await axios.get(`${API_URL}/api/playlists/${playlistId}`)
+        res.render('playlist-detalhe', { playlist: response.data.data });
     } catch (error) {
-        console.error("Ocorreu um erro ao buscar os detalhes da playlist:", error.message);
+        console.error(error);
         res.redirect('/playlists');
     }
-}); 
+});
 
 // PATCH /playlists/:name
 app.post('/playlists/edit/:id', async (req, res) => {
@@ -90,7 +60,7 @@ app.post('/playlists/edit/:id', async (req, res) => {
         const { id } = req.params;
         const { name } = req.body;
 
-        await axios.patch(`${API_URL}/playlists/${id}`, { name: name });
+        await axios.patch(`${API_URL}/api/playlists/${id}`, { name: name });
 
         // Redireciona de volta para a PRÓPRIA página de detalhes
         res.redirect(`/playlists/${id}`);
@@ -102,7 +72,7 @@ app.post('/playlists/edit/:id', async (req, res) => {
 
 app.post('/playlists/delete/:id', async (req, res) => {
     try {
-        await axios.delete(`${API_URL}/playlists/${req.params.id}`);
+        await axios.delete(`${API_URL}/api/playlists/${req.params.id}`);
         res.redirect('/playlists');
     } catch (error) {
         console.error(error);
@@ -114,7 +84,7 @@ app.post('/videos/:id_playlist', async (req, res) => {
     try {
         const { id_playlist } = req.params;
         const { video_url } = req.body;
-        await axios.post(`${API_URL}/videos/${id_playlist}`, { url: video_url });
+        await axios.post(`${API_URL}/api/playlists/videos/${id_playlist}`, { url: video_url });
         res.redirect(`/playlists/${id_playlist}`);
     } catch (error) {
         console.error(error);
@@ -126,7 +96,7 @@ app.post('/videos/delete/:id', async (req, res) => {
     const videoId = req.params.id;
     const { playlistId } = req.body;
     try {
-        await axios.delete(`${API_URL}/videos/${videoId}`);
+        await axios.delete(`${API_URL}/api/playlists/videos/${videoId}`);
         res.redirect(`/playlists/${playlistId}`);
     } catch (error) {
         console.error(error);
@@ -149,17 +119,29 @@ app.post('/downloads/playlist/:id', async (req, res) => {
     // ...
 });
 
-app.post('/downloads', (req, res) => {
-    const { url } = req.body;
+async function downloadCompleted(fileId) {
+    console.log('Download do vídeo concluído no backend. Iniciando download no cliente...');
+    console.log('File ID para download:', fileId);
+    
+    // Esconde o card de progresso e mostra o de sucesso
+    document.getElementById('progressCard').classList.add('d-none');
+    document.getElementById('successCard').classList.remove('d-none');
 
-    if (url) {
-        const downloadApiUrl = `${API_URL}/downloads/${encodeURIComponent(url)}`;
-        console.log(`Redirecionando para: ${downloadApiUrl}`);
-        res.redirect(downloadApiUrl);
-    } else {
-        res.render('index', { videoUrl: null, error: 'URL inválida.' });
+    // Chama a função de download no cliente
+    await baixarArquivoCliente(`${window.location.origin}/downloads/file/${fileId}`, fileId);
+    // Observação: `window.location.origin` assume que o seu gateway de downloads está no mesmo domínio e porta que o seu frontend.
+    // Se o seu gateway estiver em outro domínio/porta, substitua por `http://seu-gateway.com/downloads/file/${fileId}`
+    
+    // Fecha a conexão SSE após o download
+    if (eventSource) {
+        eventSource.close();
+        eventSource = null;
     }
-});
+    
+    // Re-habilita o botão de download após um pequeno atraso ou interação do usuário, se necessário
+    // document.getElementById('downloadBtn').disabled = false;
+    // document.getElementById('downloadBtn').innerHTML = '<i class="fas fa-download me-2"></i>Baixar';
+}
 
 // Inicia o servidor
 app.listen(PORT, () => {

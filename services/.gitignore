@@ -1,0 +1,30 @@
+# Ignore vendored gems but ensure source stays tracked
+/vendor/
+/vendor/bundle/
+
+# Ruby artifacts
+*.gem
+log/
+tmp/
+
+# Bundler
+.bundle/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+
+# IDEs and macOS
+.vscode/
+.idea/
+.DS_Store
+
+# Keep README and code
+!README.md
+!**/*.rb
+!**/*.py
+!**/*.sh
+!**/*.md

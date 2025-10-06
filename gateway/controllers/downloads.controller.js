@@ -1,78 +1,144 @@
 import gRpcDownloadClient from '../clients/downloadClient/grpc.client.js';
-import restDownloadClient from '../clients/downloadClient/rest.client.js';
+import path from 'path';
+import fs from 'fs';
+import crypto from 'crypto';
 
-const getClient = (req) => (req.headers['x-communication-protocol'] === 'grpc' ? gRpcDownloadClient : restDownloadClient);
+const TEMP_DOWNLOAD_DIR = path.join(process.cwd(), 'temp_downloads');
+// A verificação e criação da pasta já é feita pelo Dockerfile, mas manter aqui é seguro.
+if (!fs.existsSync(TEMP_DOWNLOAD_DIR)) {
+    fs.mkdirSync(TEMP_DOWNLOAD_DIR);
+}
 
-// GET /downloads/metadata?url=...
 const getVideoMetadata = async (req, res, next) => {
     try {
-        const client = getClient(req);
         const { url } = req.query;
         if (!url) {
-            return res.status(400).json({ error: 'Query parameter "url" é obrigatório.' });
+            return res.status(400).json({ error: 'O parâmetro "url" é obrigatório.' });
         }
-        // Chamada unária simples para obter metadados
-        const result = await client.getMetadata({ video_url: url });
+        // Nota: O cliente REST não é usado nesta implementação, mas a lógica é mantida por flexibilidade
+        const result = await gRpcDownloadClient.getMetadata({ url });
         res.status(200).json(result);
     } catch (error) {
         next(error);
     }
 };
 
-// GET /downloads/initiate?url=...
 const downloadVideo = (req, res, next) => {
-    // ⭐ Nota: Esta função não é `async` porque ela lida com um stream contínuo.
     const { url } = req.query;
     if (!url) {
-        return res.status(400).json({ error: 'Query parameter "url" é obrigatório.' });
+        return res.status(400).json({ error: 'O parâmetro "url" é obrigatório.' });
     }
 
     try {
-        // Apenas o cliente gRPC suporta o streaming definido no proto
-        const stream = gRpcDownloadClient.download({ url });
+        // Flag de controle para evitar limpeza em caso de sucesso
+        let isCompletedSuccessfully = false;
 
-        // 1. Configura os headers para Server-Sent Events (SSE)
+        const stream = gRpcDownloadClient.download({ url });
+        const fileId = `${crypto.randomBytes(16).toString('hex')}.mp4`;
+        const tempFilePath = path.join(TEMP_DOWNLOAD_DIR, fileId);
+        const fileWriteStream = fs.createWriteStream(tempFilePath);
+
+        console.log(`[Gateway] Iniciando download para URL: ${url}. Arquivo temporário: ${fileId}`);
+
         res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
-        res.flushHeaders(); // Envia os headers imediatamente
+        res.flushHeaders();
 
-        // 2. Escuta os dados chegando do stream gRPC
-        stream.on('data', (status) => {
-            // Formata a mensagem no padrão SSE e envia para o cliente
-            res.write(`data: ${JSON.stringify(status)}\n\n`);
+        const sendSse = (data) => {
+            res.write(`data: ${JSON.stringify(data)}\n\n`);
+        };
+
+        stream.on('data', (chunk) => {
+            if (chunk.progress) {
+                sendSse({ type: 'progress', ...chunk.progress });
+            } else if (chunk.data) {
+                fileWriteStream.write(chunk.data);
+            }
         });
 
-        // 3. Escuta o fim do stream
         stream.on('end', () => {
-            console.log('Stream de download finalizado.');
-            res.end(); // Fecha a conexão HTTP
+            // Marca o download como bem-sucedido ANTES de fechar a conexão
+            isCompletedSuccessfully = true;
+
+            console.log(`[Gateway] Stream gRPC para ${fileId} finalizado.`);
+            fileWriteStream.end(() => {
+                console.log(`[Gateway] Arquivo ${fileId} salvo com sucesso no disco.`);
+                sendSse({
+                    type: 'completed',
+                    downloadUrl: `/downloads/file/${fileId}`
+                });
+                res.end(); // Fecha a conexão SSE
+            });
         });
 
-        // 4. Escuta erros no stream
         stream.on('error', (err) => {
-            console.error('Erro no stream gRPC:', err);
-            // É difícil enviar um status de erro aqui, pois a conexão já está aberta
-            // mas podemos tentar enviar uma mensagem de erro antes de fechar
-            res.write(`data: ${JSON.stringify({ error_message: 'Erro no servidor' })}\n\n`);
+            console.error(`[Gateway] Erro no stream gRPC para ${fileId}:`, err);
+            fileWriteStream.end();
+            fs.unlink(tempFilePath, (unlinkErr) => {
+                if (unlinkErr) console.error(`[Gateway] Falha ao remover arquivo temporário ${fileId}:`, unlinkErr);
+            });
+            sendSse({ type: 'error', message: err.details || 'Ocorreu um erro no servidor.' });
             res.end();
         });
 
-        // 5. Se o cliente HTTP fechar a conexão, cancelamos o stream gRPC
         req.on('close', () => {
-            console.log('Cliente desconectou. Cancelando stream.');
-            stream.cancel();
+            // Só executa a limpeza se o download NÃO foi concluído com sucesso
+            if (!isCompletedSuccessfully) {
+                console.log(`[Gateway] Cliente desconectou (download abortado). Cancelando stream para ${fileId}.`);
+                stream.cancel();
+                fileWriteStream.end();
+                fs.unlink(tempFilePath, () => {
+                    console.log(`[Gateway] Arquivo temporário abortado ${fileId} removido.`);
+                });
+            } else {
+                console.log(`[Gateway] Conexão SSE para ${fileId} fechada normalmente após o sucesso.`);
+            }
         });
 
     } catch (error) {
-      console.error('--- ERRO SINCRONO AO INICIAR STREAM ---');
-      console.error(error);
-      req.log.error({ err: error }, 'Falha síncrona ao iniciar o stream de download');
-      next(error);
+        console.error("Erro síncrono ao iniciar download:", error);
+        next(error);
+    }
+};
+
+const serveDownloadedVideo = (req, res) => {
+    const { file_id } = req.params;
+
+    if (!file_id || !/^[a-f0-9]+\.mp4$/.test(file_id)) {
+        return res.status(400).send('File ID inválido.');
+    }
+
+    const filePath = path.join(TEMP_DOWNLOAD_DIR, file_id);
+    console.log(`[Gateway] Cliente solicitou o arquivo: ${file_id}`);
+
+    if (fs.existsSync(filePath)) {
+        res.setHeader('Content-Type', 'video/mp4');
+        const readStream = fs.createReadStream(filePath);
+        readStream.pipe(res);
+
+        readStream.on('end', () => {
+            console.log(`[Gateway] Arquivo ${file_id} enviado com sucesso. Removendo.`);
+            fs.unlink(filePath, (err) => {
+                if (err) {
+                    console.error(`[Gateway] Falha ao remover o arquivo ${file_id}:`, err);
+                }
+            });
+        });
+
+        readStream.on('error', (err) => {
+            console.error(`[Gateway] Erro ao ler o arquivo ${file_id}:`, err);
+            res.status(500).end();
+        });
+
+    } else {
+        console.warn(`[Gateway] Tentativa de acesso a arquivo não encontrado: ${file_id}`);
+        res.status(404).send('Arquivo não encontrado ou já expirado.');
     }
 };
 
 export default {
     getVideoMetadata,
     downloadVideo,
+    serveDownloadedVideo
 };

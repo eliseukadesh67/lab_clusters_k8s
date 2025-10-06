@@ -19,6 +19,7 @@ const setupRoutes = (app) => {
   // --- Rotas de Downloads ---
   app.get('/downloads/metadata', DownloadController.getVideoMetadata);
   app.get('/downloads', DownloadController.downloadVideo);
+  app.get('/downloads/file/:file_id', DownloadController.serveDownloadedVideo);
 
   console.log('✅ Rotas configuradas.');
 };

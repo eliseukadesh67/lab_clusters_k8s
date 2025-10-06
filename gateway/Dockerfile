@@ -17,6 +17,12 @@ COPY $GATEWAY_PATH .
 # Copia a pasta de protos da raiz do contexto para uma pasta 'proto' na imagem
 COPY proto/ ./proto/
 
+
+RUN mkdir /app/temp_downloads
+
+# 2. Dá a posse do diretório para o usuário 'node'
+RUN chown node:node /app/temp_downloads
+
 # Define o usuário para maior segurança
 USER node
 

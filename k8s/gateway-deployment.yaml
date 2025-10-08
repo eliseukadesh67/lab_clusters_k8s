@@ -24,6 +24,10 @@ spec:
           value: "playlist-service:50051" # K8s DNS: <service-name>:<port>
         - name: DOWNLOADS_GRPC_URL
           value: "download-service:50052"
+        - name: PLAYLISTS_REST_URL
+          value: "playlist-service:5001"
+        - name: DOWNLOADS_REST_URL
+          value: "download-service:5002"
         - name: PORT
           value: "3000"
         - name: PROTO_DIR

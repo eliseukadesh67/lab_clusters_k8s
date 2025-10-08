@@ -164,7 +164,7 @@ def health_check():
     return jsonify({'status': 'healthy', 'service': 'download-service'}), 200
 
 
-if __name__ == '__main__':
+def run_http_server():
     print("=" * 60)
     print("Service B - Download REST API Server")
     print("=" * 60)

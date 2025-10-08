@@ -14,3 +14,4 @@ typing_extensions==4.15.0
 urllib3==2.5.0
 websockets==15.0.1
 yt-dlp==2025.9.26
+flask==3.0.0

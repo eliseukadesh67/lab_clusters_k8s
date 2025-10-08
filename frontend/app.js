@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true })); // Para conseguir ler dados de 
 axios.defaults.headers.common['x-communication-protocol'] = PROTOCOL;
 
 app.get('/', (req, res) => {
-    res.render('index', { videoUrl: null, error: null });
+    res.render('index', { videoUrl: null, error: null, gatewayBaseUrl: API_URL });
 });
 
 app.post('/playlists', async (req, res) => {

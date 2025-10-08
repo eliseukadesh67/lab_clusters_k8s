@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ngrok-deployment
-  namespace: microservices-app
+  namespace: microservices
   labels:
     app: ngrok
 spec:
@@ -24,8 +24,8 @@ spec:
         - name: NGROK_AUTHTOKEN
           valueFrom:
             secretKeyRef:
-              name: ngrok-authtoken
-              key: AUTHTOKEN
+              name: ngrok-secret
+              key: NGROK_AUTHTOKEN
         args:
         - "http"
         - "ingress-nginx-controller.ingress-nginx:80"

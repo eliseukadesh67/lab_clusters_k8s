@@ -1,7 +1,10 @@
 import gRpcDownloadClient from "../clients/downloadClient/grpc.client.js";
+import restDownloadClient from "../clients/downloadClient/rest.client.js"
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
+
+const getClient = (req) => (req.headers['x-communication-protocol'] === 'grpc' ? gRpcDownloadClient : restDownloadClient);
 
 const TEMP_DOWNLOAD_DIR = path.join(process.cwd(), "temp_downloads");
 // A verificação e criação da pasta já é feita pelo Dockerfile, mas manter aqui é seguro.
@@ -11,6 +14,7 @@ if (!fs.existsSync(TEMP_DOWNLOAD_DIR)) {
 
 const getVideoMetadata = async (req, res, next) => {
   try {
+    const client = getClient(req);
     const { url } = req.query;
     if (!url) {
       return res
@@ -18,7 +22,7 @@ const getVideoMetadata = async (req, res, next) => {
         .json({ error: 'O parâmetro "url" é obrigatório.' });
     }
     // Nota: O cliente REST não é usado nesta implementação, mas a lógica é mantida por flexibilidade
-    const result = await gRpcDownloadClient.getMetadata({ url });
+    const result = await client.getMetadata({ url });
     res.status(200).json(result);
   } catch (error) {
     next(error);
@@ -32,10 +36,11 @@ const downloadVideo = (req, res, next) => {
   }
 
   try {
+    const client = getClient(req);
     // Flag de controle para evitar limpeza em caso de sucesso
     let isCompletedSuccessfully = false;
 
-    const stream = gRpcDownloadClient.download({ url });
+    const stream = client.download({ url });
     const fileId = `${crypto.randomBytes(16).toString("hex")}.mp4`;
     const tempFilePath = path.join(TEMP_DOWNLOAD_DIR, fileId);
     const fileWriteStream = fs.createWriteStream(tempFilePath);
@@ -99,7 +104,15 @@ const downloadVideo = (req, res, next) => {
         console.log(
           `[Gateway] Cliente desconectou (download abortado). Cancelando stream para ${fileId}.`
         );
-        stream.cancel();
+        
+        // O método cancel() só existe no stream do cliente gRPC
+        if (typeof stream.cancel === 'function') {
+          stream.cancel();
+        } else {
+          // Para streams HTTP (REST), podemos destruir o stream
+         
+          stream.destroy();
+        }
         fileWriteStream.end();
         fs.unlink(tempFilePath, () => {
           console.log(

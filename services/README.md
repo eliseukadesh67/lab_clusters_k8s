@@ -6,17 +6,18 @@ Este diretório contém as implementações dos serviços A e B em duas versões
 
 ```
 services/
-├── grpc/
-│   ├── server_a/          # Service A - Playlist (gRPC) em Ruby
-│   └── server_b/          # Service B - Download (gRPC) em Python
-└── rest/
-    ├── server_a/          # Service A - Playlist (REST) em Ruby/Sinatra
-    └── server_b/          # Service B - Download (REST) em Python/Flask
+├── playlist/          # Service Playlist em Ruby
+│   ├── rest/          # Playlist (REST) em Ruby/Sinatra
+│   └── grpc/          # Playlist (gRpc) em Ruby
+└── download/           # Service Dowload em Python
+│   ├── grpc_service/   # Download (gRpc) em Python
+|   └── rest_service/   # Download (REST) em Python/Flask          
+├── main_server.py      # Servidor principal (Podendo ser HTTP ou gRpc)
 ```
 
 ## Visão Geral dos Serviços
 
-### Service A - Playlist Service
+### Playlist Service
 Gerencia playlists e vídeos, armazenando informações em banco de dados SQLite3.
 
 **Funcionalidades:**
@@ -28,7 +29,7 @@ Gerencia playlists e vídeos, armazenando informações em banco de dados SQLite
 - **gRPC**: Ruby + Protocol Buffers
 - **REST**: Ruby + Sinatra + JSON
 
-### Service B - Download Service
+### Download Service
 Extrai metadados e faz download de vídeos do YouTube.
 
 **Funcionalidades:**
@@ -57,7 +58,7 @@ Extrai metadados e faz download de vídeos do YouTube.
 
 ### Versão gRPC
 
-#### Service B (Python)
+#### Download Service (Python)
 ```bash
 cd grpc/server_b
 python3 -m venv venv
@@ -66,7 +67,7 @@ pip install -r requirements.txt
 python download_server.py
 ```
 
-#### Service A (Ruby)
+#### Playlist Service (Ruby)
 ```bash
 cd grpc/server_a
 bundle config set --local path 'vendor/bundle'
@@ -76,7 +77,7 @@ bundle exec ruby playlist_server.rb
 
 ### Versão REST
 
-#### Service B (Python/Flask)
+#### Download Service (Python/Flask)
 ```bash
 cd rest/server_b
 python3 -m venv venv
@@ -85,7 +86,7 @@ pip install -r requirements.txt
 python3 download_rest_server.py
 ```
 
-#### Service A (Ruby/Sinatra)
+#### Playlist Service (Ruby/Sinatra)
 ```bash
 cd rest/server_a
 bundle config set --local path 'vendor/bundle'
@@ -97,40 +98,40 @@ bundle exec ruby playlist_rest_server.rb
 
 | Serviço | gRPC | REST |
 |---------|------|------|
-| Service A (Playlist) | 50051 | 5001 |
-| Service B (Download) | 50052 | 5002 |
+| Service Playlist | 50051 | 5001 |
+| Service Download | 50052 | 5002 |
 
 ## Testes
 
 ### Testar versão REST
 
-#### Service B
+#### Download Service
 ```bash
-cd rest/server_b
+cd download/rest_service
 ./test_download_api.sh
 ```
 
-#### Service A
+#### Service Playlist
 ```bash
-cd rest/server_a
+cd playlist/rest_service
 ./test_playlist_api.sh
 ```
 
 ### Testar versão gRPC
 
-Consulte os READMEs específicos em cada diretório `grpc/server_a` e `grpc/server_b`.
+Consulte os READMEs específicos em cada diretório `download/grp_service` e `playlist/grpc_service`.
 
 ## Comunicação entre Serviços
 
 ### gRPC
-Service A faz chamadas gRPC para Service B usando stubs:
+Service Playlist faz chamadas gRPC para Service Download usando stubs:
 ```ruby
 @download_stub = Download::DownloadService::Stub.new('localhost:50052', :this_channel_is_insecure)
 metadata = @download_stub.get_video_metadata(Download::DownloadRequest.new(video_url: url))
 ```
 
 ### REST
-Service A faz chamadas HTTP para Service B:
+Service Playlist faz chamadas HTTP para Service Download:
 ```ruby
 uri = URI('http://localhost:5002/metadata')
 request = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
@@ -140,7 +141,7 @@ response = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(request
 
 ## Mapeamento de Endpoints
 
-### Service A - Playlist
+### Service Playlists
 
 | gRPC RPC | REST Endpoint | Método HTTP |
 |----------|---------------|-------------|
@@ -153,7 +154,7 @@ response = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(request
 | PostVideos | /videos | POST |
 | DeleteVideos | /videos/:id | DELETE |
 
-### Service B - Download
+### Service Download
 
 | gRPC RPC | REST Endpoint | Método HTTP |
 |----------|---------------|-------------|
@@ -190,12 +191,50 @@ response = Net::HTTP.start(uri.hostname, uri.port) { |http| http.request(request
 ### 4. Estrutura de Diretórios
 ```
 services/
-  grpc/
-    server_a/
-    server_b/
-  rest/
-    server_a/
-    server_b/
+|── download
+│   ├── Dockerfile
+│   ├── download_client.py
+│   ├── download_pb2_grpc.py
+│   ├── download_pb2.py
+│   ├── download_pb2.pyi
+│   ├── download_server.py
+│   ├── grpc_service
+│   │   ├── download_client.py
+│   │   ├── download_pb2_grpc.py
+│   │   ├── download_pb2.py
+│   │   ├── download_pb2.pyi
+│   │   ├── download_server.py
+│   │   └── __init__.py
+│   ├── main_server.py
+│   ├── README.md
+│   ├── requirements.txt
+│   └── rest_service
+│       ├── download_rest_server.py
+│       ├── __init__.py
+│       ├── __pycache__
+│       │   └── download_rest_server.cpython-38.pyc
+│       ├── README.md
+│       └── test_download_api.sh
+├── playlist
+│   ├── Dockerfile
+│   ├── grpc_service
+│   │   ├── download_pb.rb
+│   │   ├── download_services_pb.rb
+│   │   ├── Gemfile
+│   │   ├── Gemfile.lock
+│   │   ├── playlist_client.rb
+│   │   ├── playlist_pb.rb
+│   │   ├── playlist_server.rb
+│   │   ├── playlist_services_pb.rb
+│   │   └── README.md
+│   └── rest_service
+│       ├── Gemfile
+│       ├── Gemfile.lock
+│       ├── playlist_repository.rb
+│       ├── playlist_rest_server.rb
+│       ├── README.md
+│       └── test_playlist_api.sh
+└── README.md
 ```
 **Motivo:** Mantém as duas versões separadas e organizadas, facilitando comparação e manutenção.
 
@@ -281,7 +320,7 @@ Verifique se a URL é válida e o vídeo está acessível.
 
 ## Documentação Adicional
 
-- [Service A (gRPC) README](grpc/server_a/README.md)
-- [Service B (gRPC) README](grpc/server_b/README.md)
-- [Service A (REST) README](rest/server_a/README.md)
-- [Service B (REST) README](rest/server_b/README.md)
+- [Service Playlist (gRPC) README](playlist/gpc_service/README.md)
+- [Service Download (gRPC) README](download/grpc_services/README.md)
+- [Service Playlist (REST) README](playlist/rest_service/README.md)
+- [Service Download (REST) README](download/grpc_service/README.md)

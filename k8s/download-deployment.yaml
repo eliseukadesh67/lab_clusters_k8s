@@ -22,3 +22,6 @@ spec:
           containerPort: 50052
         - name: http
           containerPort: 5002
+        env: # Injeta as URLs dos serviços internos como variáveis de ambiente
+        - name: PROTOCOL
+          value: "rest"

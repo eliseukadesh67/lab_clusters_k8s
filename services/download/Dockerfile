@@ -20,4 +20,4 @@ COPY . .
 EXPOSE 50052
 EXPOSE 5002
 
-CMD ["python", "download_server.py"]
+CMD ["python", "main_server.py"]

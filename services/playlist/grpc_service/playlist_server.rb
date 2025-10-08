@@ -213,14 +213,15 @@ class PlaylistServer < Playlist::PlaylistService::Service
   end
 end
 
-def main
-  port = '0.0.0.0:50051'
-  server = GRPC::RpcServer.new
-  server.add_http2_port(port, :this_port_is_insecure)
-  server.handle(PlaylistServer.new)
-  
-  puts "Servidor Playlist gRPC iniciado em #{port}"
-  server.run_till_terminated_or_interrupted([1, 'int', 'SIGQUIT'])
-end
+module GrpcRunner
+  def self.start
+    port = '0.0.0.0:50051'
+    server = GRPC::RpcServer.new
+    server.add_http2_port(port, :this_port_is_insecure)
+    server.handle(PlaylistServer.new)
+    
+    puts "Servidor Playlist gRPC iniciado em #{port}"
+    server.run_till_terminated_or_interrupted([1, 'int', 'SIGQUIT'])
 
-main
+  end
+end

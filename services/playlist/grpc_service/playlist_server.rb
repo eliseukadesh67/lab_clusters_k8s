@@ -8,7 +8,7 @@ require_relative 'download_services_pb'
 
 $stdout.sync = true
 
-DOWNLOAD_SERVER_ADDR = 'download-service:50052'
+DOWNLOAD_SERVER_ADDR = ENV["DOWNLOADS_GRPC_URL"]
 
 module Model
   Playlist = Struct.new(:id, :name, :videos, keyword_init: true)

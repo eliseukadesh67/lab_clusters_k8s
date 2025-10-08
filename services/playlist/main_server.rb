@@ -1,11 +1,14 @@
 protocol = ENV['PROTOCOL']
 
+$stdout.sync = true
+
 case protocol
 when 'rest'
   puts "==> Iniciando servidor REST (Sinatra)..."
   require_relative 'rest_service/playlist_rest_server'
 
   puts "=" * 60
+  puts "TESTEEEEEEEEEEEEEEEEEEEEEEE"
   puts "Service Playlist - REST API Server"
   puts "=" * 60
   puts "Servidor iniciado em http://localhost:5001"
@@ -21,15 +24,12 @@ when 'rest'
   puts "  DELETE /videos/:id       - Deletar vídeo"
   puts "  GET    /health           - Health check"
   puts "=" * 60
-  puts ""
-  puts "IMPORTANTE: Certifique-se de que o Service Download está rodando em #{DOWNLOAD_SERVICE_URL}"
-  puts "=" * 60
 
   PlaylistApp.run!
 
 when 'grpc'
   puts "==> Iniciando servidor gRPC..."
-  require_relative 'grpc_service/playlist_services'
+  require_relative 'grpc_service/playlist_server'
   
   GrpcRunner.start
 

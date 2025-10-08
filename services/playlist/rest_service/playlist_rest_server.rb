@@ -2,14 +2,29 @@ require 'sinatra'
 require 'json'
 require 'net/http'
 require_relative 'playlist_repository'
+require 'logger' # Importa o logger padrão do Ruby
 
-Class PlaylistApp < Sinatra::Base
+# Força a escrita imediata e cria um logger padrão que escreve para a saída do container
+$stdout.sync = true
+LOGGER = Logger.new($stdout)
+
+class PlaylistApp < Sinatra::Base
+  
+  before do
+    LOGGER.info("================ INÍCIO DA REQUISIÇÃO ================")
+    # Imprime cada detalhe do ambiente da requisição, incluindo todos os headers
+    request.env.each do |key, value|
+      LOGGER.info("#{key.ljust(30)} => #{value}")
+    end
+    LOGGER.info("================= FIM DA REQUISIÇÃO =================")
+  end
+
   # Configure Sinatra
   set :port, 5001
   set :bind, '0.0.0.0'
   set :show_exceptions, false
 
-  DOWNLOAD_SERVICE_URL = ENV['DOWNLOAD_SERVICE_URL']
+  DOWNLOAD_SERVICE_URL = ENV['DOWNLOADS_REST_URL']
 
   # Helper methods
   helpers do
@@ -82,10 +97,23 @@ Class PlaylistApp < Sinatra::Base
 
   # List all playlists
   get '/playlists' do
-    repo = PlaylistRepository.new
-    playlists_models = repo.get_playlists
-    items = playlists_models.map { |p| model_to_hash_playlist(p) }
-    json_response({ items: items })
+    begin
+      # Sua lógica original de volta!
+      repo = PlaylistRepository.new
+      playlists_models = repo.get_playlists
+      items = playlists_models.map { |p| model_to_hash_playlist(p) }
+      json_response({ items: items })
+  
+    rescue Exception => e # Mantenha o 'Exception' para garantir
+      LOGGER.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+      LOGGER.error("!! ERRO REAL CAPTURADO NO ENDPOINT /playlists !!")
+      LOGGER.error("!! CLASSE: #{e.class}")
+      LOGGER.error("!! MENSAGEM: #{e.message}")
+      LOGGER.error("!! BACKTRACE: #{e.backtrace.join("\n")}")
+      LOGGER.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  
+      json_error("Erro interno no serviço de playlist: #{e.message}", 500)
+    end
   end
 
   # Get playlist by ID

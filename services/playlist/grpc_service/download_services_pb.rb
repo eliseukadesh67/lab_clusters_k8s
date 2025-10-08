@@ -2,7 +2,7 @@
 # Source: download.proto for package 'download'
 
 require 'grpc'
-require 'download_pb'
+require_relative 'download_pb'
 
 module Download
   module DownloadService

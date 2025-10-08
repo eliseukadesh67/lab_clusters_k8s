@@ -4,7 +4,7 @@ gem 'sinatra', '~> 4.0'
 gem 'sqlite3', '~> 1.6'
 gem 'ulid', '~> 1.4'
 gem 'rackup', '~> 2.1'
-gem 'puma', '~> 6.4'
+gem 'webrick'
 gem 'grpc'
 gem 'grpc-tools'
 gem 'securerandom', require: false

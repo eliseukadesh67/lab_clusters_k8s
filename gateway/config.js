@@ -63,4 +63,7 @@ const config = {
     }
 };
 
+console.log(`[REST Client Download Service ] Conectado a ${process.env.DOWNLOADS_REST_URL}`);
+console.log(`[REST Client Playlists Service ] Conectado a ${process.env.PLAYLISTS_REST_URL}`);
+
 export default config;

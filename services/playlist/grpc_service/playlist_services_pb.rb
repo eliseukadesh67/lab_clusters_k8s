@@ -2,7 +2,7 @@
 # Source: playlist.proto for package 'playlist'
 
 require 'grpc'
-require 'playlist_pb'
+require_relative 'playlist_pb'
 
 module Playlist
   module PlaylistService

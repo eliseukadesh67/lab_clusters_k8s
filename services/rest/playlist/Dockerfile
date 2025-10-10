@@ -11,7 +11,7 @@ WORKDIR $APP_HOME
 RUN apt-get update -qq && apt-get install -y --no-install-recommends build-essential
 
 # Copia os arquivos de dependência do diretório atual (.)
-COPY Gemfile Gemfile.lock ./
+COPY Gemfile ./
 
 RUN bundle config set --local path 'vendor/bundle'
 
@@ -24,4 +24,4 @@ COPY . .
 EXPOSE 50051
 EXPOSE 5001
 
-CMD ["bundle", "exec" , "ruby", "-I", "." ,"main_server.rb"]
+CMD ["bundle", "exec" , "ruby", "-I", "." ,"playlist_rest_server.rb"]

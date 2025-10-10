@@ -1,24 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: playlist-deployment
+  name: rest-download-deployment
   namespace: microservices
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: playlist-service
+      app: rest-download-service
   template:
     metadata:
       labels:
-        app: playlist-service
+        app: rest-download-service
     spec:
       containers:
-      - name: playlist-service-container
-        image: playlist-service:latest
+      - name: rest-download-service-container
+        image: rest-download-service:latest
         imagePullPolicy: IfNotPresent
         ports:
-        - name: grpc
-          containerPort: 50051
         - name: http
-          containerPort: 5001
+          containerPort: 5002

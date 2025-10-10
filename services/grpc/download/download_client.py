@@ -2,8 +2,8 @@ import grpc
 import sys
 import os
 from tqdm import tqdm
-from . import download_pb2
-from . import download_pb2_grpc
+import download_pb2
+import download_pb2_grpc
 
 def run_client(command: str, video_url: str):
     server_address = 'localhost:50052'

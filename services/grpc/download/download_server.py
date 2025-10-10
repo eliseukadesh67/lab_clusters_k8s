@@ -5,8 +5,8 @@ from concurrent import futures
 import threading
 import queue
 import time
-from . import download_pb2
-from . import download_pb2_grpc
+import download_pb2
+import download_pb2_grpc
 import logging
 
 logging.basicConfig(
@@ -134,7 +134,7 @@ class DownloadService(download_pb2_grpc.DownloadServiceServicer):
             # Envia o item (seja progresso ou chunk de dados) para o cliente
             yield item
 
-def run_grpc_server():
+def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     download_pb2_grpc.add_DownloadServiceServicer_to_server(DownloadService(), server)
     port = '50052'
@@ -145,3 +145,6 @@ def run_grpc_server():
         server.wait_for_termination()
     except KeyboardInterrupt:
         server.stop(0)
+        
+if __name__ == '__main__':
+  serve()

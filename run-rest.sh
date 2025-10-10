@@ -44,13 +44,7 @@ echo "Construindo imagem 'gateway-service:latest'..."
 docker build -t gateway-service:latest -f ./gateway/Dockerfile .
 
 echo "Construindo imagem 'grp-download-service:latest'..."
-docker build -t grpc-download-service:latest ./services/grpc/download
-
-echo "Construindo imagem 'rest-download-service:latest'..."
 docker build -t rest-download-service:latest ./services/rest/download
-
-echo "Construindo imagem 'grpc-playlist-service:latest'..."
-docker build -t grpc-playlist-service:latest ./services/grpc/playlist
 
 echo "Construindo imagem 'rest-playlist-service:latest'..."
 docker build -t rest-playlist-service:latest ./services/rest/playlist
@@ -75,64 +69,12 @@ echo "Garantindo que a criação do namespace '${NAMESPACE}'"
 kubectl apply -f k8s/namespace.yaml
 echo -e "${GREEN}✅ Namespace '${NAMESPACE}' aplicado.${NC}"
 
-echo "Garantindo a existência do Secret do Ngrok ..."
-# Verifica se a variável de ambiente NGROK_AUTHTOKEN está definida
-if [ -z "$NGROK_AUTHTOKEN" ]; then
-    echo -e "${YELLOW}⚠️ ERRO: A variável de ambiente NGROK_AUTHTOKEN não está definida.${NC}"
-    echo "Por favor, defina-a com o seu token e tente novamente:"
-    echo "export NGROK_AUTHTOKEN=\"seu_token_aqui\""
-    exit 1
-fi
-
-SECRET_NAME="ngrok-secret"
-
-kubectl create secret generic ${SECRET_NAME} \
-  --namespace=${NAMESPACE} \
-  --from-literal=NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN} \
-  --dry-run=client -o yaml | kubectl apply -f -
-
-echo -e "${GREEN}✅ Secret '${SECRET_NAME}' configurado no namespace '${NAMESPACE}'.${NC}"
-
 echo "Aplicando os deployments e services no namespace '$NAMESPACE'..."
-kubectl apply -f $K8S_MANIFESTS
+#kubectl apply -f $K8S_MANIFESTS
+kubectl apply -f $K8S_MANIFESTS/rest
 echo -e "${GREEN}Deployments e Services aplicados.${NC}\n"
 
-# --- PASSO 6: MOSTRAR URL DO NGROK ---
-echo -e "${CYAN}--- PASSO 6: Aguardando a URL pública do Ngrok ---${NC}"
+URL=$(minikube ip)
 
-echo "Verificando se o pod do Ngrok está em execução..."
-# Espera o pod ser criado e obter um nome.
-while [ -z "$(kubectl get pods -n $NAMESPACE -l app=ngrok -o jsonpath='{.items[0].metadata.name}')" ]; do
-  echo -n "."
-  sleep 2
-done
-
-NGROK_POD_NAME=$(kubectl get pods -n $NAMESPACE -l app=ngrok -o jsonpath='{.items[0].metadata.name}')
-echo -e "\nPod do Ngrok (${NGROK_POD_NAME}) encontrado. Buscando URL nos logs..."
-
-URL=""
-
-for i in {1..30}; do
-  URL=$(kubectl logs -n $NAMESPACE $NGROK_POD_NAME | grep -o 'url=[^ ]*' | head -n 1 | cut -d'=' -f2)
-
-  if [ ! -z "$URL" ]; then
-    break
-  fi
-  echo -n "."
-  sleep 2
-done
-
-echo "" # Pula uma linha
-
-# Verifica se a URL foi encontrada
-if [ ! -z "$URL" ]; then
-  echo -e "\n${GREEN}🎉 SUCESSO! Sua aplicação está disponível em:${NC}"
-  echo -e "${YELLOW}>> ${URL} <<${NC}\n"
-else
-  echo -e "\n${YELLOW}⚠️ ERRO: Não foi possível obter a URL do ngrok após 60 segundos.${NC}"
-  echo "Mostrando os logs do pod '${NGROK_POD_NAME}' para diagnóstico:"
-  echo "----------------------------------------------------"
-  kubectl logs -n $NAMESPACE $NGROK_POD_NAME --tail=20
-  echo "----------------------------------------------------"
-  exit 1
-fi
+echo -e "\n${GREEN}🎉 SUCESSO! Sua aplicação está disponível em:${NC}"
+echo -e "${YELLOW}>> http://${URL} <<${NC}\n"

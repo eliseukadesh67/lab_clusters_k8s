@@ -163,10 +163,9 @@ def health_check():
     """Health check endpoint"""
     return jsonify({'status': 'healthy', 'service': 'download-service'}), 200
 
-
-def run_http_server():
+if __name__ == '__main__':
     print("=" * 60)
-    print("Service B - Download REST API Server")
+    print("Download REST API Server")
     print("=" * 60)
     print("Servidor iniciado em http://localhost:5002")
     print("\nEndpoints disponíveis:")

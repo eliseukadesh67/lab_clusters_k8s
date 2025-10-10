@@ -8,7 +8,7 @@ require_relative 'download_services_pb'
 
 $stdout.sync = true
 
-DOWNLOAD_SERVER_ADDR = ENV["DOWNLOADS_GRPC_URL"]
+DOWNLOAD_SERVICE_ADDR = ENV["DOWNLOADS_GRPC_URL"]
 
 module Model
   Playlist = Struct.new(:id, :name, :videos, keyword_init: true)
@@ -44,7 +44,7 @@ class PlaylistRepository
   def get_playlists
     rows = @db.execute("SELECT * FROM playlists ORDER BY id DESC")
     rows.map do |row|
-      videos = get_videos(row['id'])
+      videos = get_videos(row['iurld'])
       Model::Playlist.new(id: row['id'], name: row['name'], videos: videos)
     end
   end
@@ -117,7 +117,7 @@ end
 
 class PlaylistServer < Playlist::PlaylistService::Service
   def initialize
-    @download_stub = Download::DownloadService::Stub.new(DOWNLOAD_SERVER_ADDR, :this_channel_is_insecure)
+    @download_stub = Download::DownloadService::Stub.new(DOWNLOAD_SERVICE_ADDR, :this_channel_is_insecure)
   end
 
   def get_playlists(_empty_request, _call)
@@ -213,15 +213,12 @@ class PlaylistServer < Playlist::PlaylistService::Service
   end
 end
 
-module GrpcRunner
-  def self.start
-    port = '0.0.0.0:50051'
-    server = GRPC::RpcServer.new
-    server.add_http2_port(port, :this_port_is_insecure)
-    server.handle(PlaylistServer.new)
-    
-    puts "Servidor Playlist gRPC iniciado em #{port}"
-    server.run_till_terminated_or_interrupted([1, 'int', 'SIGQUIT'])
-
-  end
+def main
+  port = '0.0.0.0:50051'
+  server = GRPC::RpcServer.new
+  server.add_http2_port(port, :this_port_is_insecure)
+  server.handle(PlaylistServer.new)  
+  server.run_till_terminated_or_interrupted([1, 'int', 'SIGQUIT'])
 end
+
+main

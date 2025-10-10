@@ -1,18 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: download-service
+  name: grpc-download-service
   namespace: microservices
 spec:
   selector:
-    app: download-service
+    app: grpc-download-service
   type: ClusterIP
   ports:
     - name: grpc
       protocol: TCP
       port: 50052
       targetPort: 50052
-    - name: http
-      protocol: TCP
-      port: 5002
-      targetPort: 5002

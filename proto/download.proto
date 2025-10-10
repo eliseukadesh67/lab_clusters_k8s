@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package download;
+
+service DownloadService {
+  rpc GetMetadata(Request) returns (Metadata);
+  rpc GetFile(Request) returns (stream DownloadChunk);
+}
+
+message Request {
+  string url = 1;
+}
+
+message Metadata {
+  string title = 1;
+  int32 duration = 2;
+  string thumbnail_url = 3;
+  int64 total_bytes = 4;
+}
+
+message ProgressUpdate {
+   int64 bytes_downloaded = 1;
+   int64 total_bytes = 2;
+}
+
+message DownloadChunk {
+  oneof payload {
+    ProgressUpdate progress = 1;
+    bytes data = 2;
+  }
+}

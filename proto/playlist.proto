@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package playlist;
+
+service PlaylistService {
+  
+  rpc GetPlaylists(Empty) returns (Playlists);
+  rpc GetPlaylistsById(PlaylistId) returns (Playlist);
+  rpc PostPlaylists(PlaylistInfo) returns (PlaylistId);
+  rpc PatchPlaylists(PlaylistPatchInfo) returns (PlaylistId);
+  rpc DeletePlaylists(PlaylistId) returns (Empty);
+
+  rpc GetVideosById(VideoId) returns (Video);
+  rpc PostVideos(VideoPostInfo) returns (VideoId);
+  rpc DeleteVideos(VideoId) returns (Empty);
+}
+
+message Empty {}
+
+message Playlist {
+  string id = 1;
+  string name = 2;
+  repeated Video videos = 3;
+}
+
+message Video {
+  string id = 1;
+  string url = 2;
+  string title = 3;
+  int32 duration = 4;
+  string thumbnail_url = 5;
+  string playlist_id = 6;
+}
+
+message Playlists {
+  repeated Playlist items = 1;
+}
+
+message Videos {
+  repeated Video items = 1;
+}
+
+message PlaylistId {
+  string id = 1;
+}
+
+message VideoId {
+  string id = 1;
+}
+
+message PlaylistInfo {
+  string name = 1;
+}
+
+message PlaylistPatchInfo {
+  string id = 1;
+  string name = 2;
+}
+
+message VideoPostInfo {
+  string playlist_id = 1;
+  string url = 2;
+}

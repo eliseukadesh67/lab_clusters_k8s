@@ -1,3 +1,62 @@
+# NODE
 node_modules
-__pycache__
+
+# RUBY
+vendor/
+.bundle/
+
+*.log
+
+tmp/
+*.tmp
+*.swp
+*.swo
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# PYTHON
+venv/
+__pycache__/
+downloads/
+*.exe
 .env
+
+# Common ignores
+.DS_Store
+.vscode/
+.idea/
+*.log
+*.sqlite3
+*.db
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+*.swp
+
+# Ruby/Bundler
+vendor/
+.bundle
+vendor/bundle/
+
+# Python virtual envs
+venv/
+.venv/
+env/
+
+# Coverage / temp
+coverage/
+tmp/
+
+# Ensure services folder is tracked (explicit allow)
+!/services/
+
+# If specific nested vendor directories exist, keep them ignored unless services/.gitignore overrides
+/services/**/vendor/
+/services/**/vendor/bundle/

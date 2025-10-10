@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rest-playlist-deployment
+  namespace: microservices
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rest-playlist-service
+  template:
+    metadata:
+      labels:
+        app: rest-playlist-service
+    spec:
+      containers:
+      - name: rest-playlist-service-container
+        image: rest-playlist-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 5001
+        env:
+        - name: DOWNLOADS_REST_URL
+          value: "grpc-download-service:5002"

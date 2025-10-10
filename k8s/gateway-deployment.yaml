@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: gateway-deployment
-  namespace: microservices-app
+  namespace: microservices
 spec:
   replicas: 1
   selector:
@@ -21,8 +21,16 @@ spec:
         - containerPort: 3000
         env: # Injeta as URLs dos serviços internos como variáveis de ambiente
         - name: PLAYLISTS_GRPC_URL
-          value: "playlist-service:5001" # K8s DNS: <service-name>:<port>
+          value: "grpc-playlist-service:50051" # K8s DNS: <service-name>:<port>
         - name: DOWNLOADS_GRPC_URL
-          value: "download-service:5002"
+          value: "grpc-download-service:50052"
+        - name: PLAYLISTS_REST_URL
+          value: "rest-playlist-service:5001"
+        - name: DOWNLOADS_REST_URL
+          value: "rest-download-service:5002"
         - name: PORT
           value: "3000"
+        - name: PROTO_DIR
+          value: ./proto
+        - name: NODE_ENV
+          value: development

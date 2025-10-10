@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grpc-playlist-deployment
+  namespace: microservices
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grpc-playlist-service
+  template:
+    metadata:
+      labels:
+        app: grpc-playlist-service
+    spec:
+      containers:
+      - name: grpc-playlist-service-container
+        image: grpc-playlist-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: grpc
+          containerPort: 50051
+        env:
+        - name: DOWNLOADS_GRPC_URL
+          value: "grpc-download-service:50052"

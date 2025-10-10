@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grpc-download-deployment
+  namespace: microservices
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grpc-download-service
+  template:
+    metadata:
+      labels:
+        app: grpc-download-service
+    spec:
+      containers:
+      - name: grpc-download-service-container
+        image: grpc-download-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: grpc
+          containerPort: 50052

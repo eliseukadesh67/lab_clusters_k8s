@@ -9,6 +9,27 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 K8S_MANIFESTS='k8s'
 
+cleanup() {
+    echo -e "\n\n${YELLOW}🛑 Sinal de interrupção recebido. Limpando o ambiente...${NC}"
+
+    # Deleta todos os recursos do Kubernetes criados no nosso namespace
+    echo -e "${CYAN}--> Deletando recursos do Kubernetes no namespace '${NAMESPACE}'...${NC}"
+    kubectl delete namespace "${NAMESPACE}" --ignore-not-found=true
+
+    # Para o cluster Minikube para liberar recursos da máquina
+    echo -e "${CYAN}--> Parando o Minikube...${NC}"
+    minikube stop
+
+    # Reverte o ambiente Docker de volta para o daemon local
+    echo -e "${CYAN}--> Revertendo o ambiente Docker...${NC}"
+    eval $(minikube -p minikube docker-env -u)
+
+    echo -e "\n${GREEN}🧹 Ambiente limpo com sucesso! Até logo. 👋${NC}"
+    exit 0
+}
+
+trap cleanup SIGINT SIGTERM
+
 # --- PASSO 1: VERIFICAR DEPENDÊNCIAS ---
 echo -e "${CYAN}--- PASSO 1: Verificando dependências ---${NC}"
 DEPS=("docker" "kubectl" "minikube")
@@ -74,7 +95,28 @@ kubectl apply -f $K8S_MANIFESTS
 kubectl apply -f $K8S_MANIFESTS/grpc
 echo -e "${GREEN}Deployments e Services aplicados.${NC}\n"
 
-URL=$(minikube ip)
+MINIKUBE_IP=$(minikube ip)
 
-echo -e "\n${GREEN}🎉 SUCESSO! Sua aplicação está disponível em:${NC}"
-echo -e "${YELLOW}>> http://${URL} <<${NC}\n"
+echo -e "\n${GREEN}🎉 SUCESSO! Gateway inicializado em:${NC}"
+echo -e "${YELLOW}>> http://${MINIKUBE_IP} <<${NC}\n"
+
+echo -e "${CYAN}--- PASSO 6: Iniciando frontend ---${NC}"
+
+echo "--> Criando .env para o Frontend..."
+cat <<EOF > ./frontend/.env
+# Gerado automaticamente por run.sh
+
+# URL base do API Gateway (acessível através do IP do Minikube)
+API_URL=http://${MINIKUBE_IP}
+
+# Protocolo que o frontend deve solicitar ao gateway (para testes/lógica interna)
+PROTOCOL=grpc
+
+# Porta em que o servidor do frontend deve rodar
+PORT=8000
+EOF
+
+cd frontend
+
+npm install
+node app.js

@@ -56,4 +56,13 @@ else
     echo -e "${GREEN}Minikube já está instalado.${NC}"
 fi
 
+if ! command -v node &> /dev/null; then
+    echo "Node.js não encontrado. Instalando a versão LTS..."
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+    echo -e "${GREEN}Node.js e npm instalados com sucesso.${NC}"
+else
+    echo -e "${GREEN}Node.js e npm já estão instalados.${NC}"
+fi
+
 echo -e "\n${GREEN}Verificação de dependências concluída!${NC}"

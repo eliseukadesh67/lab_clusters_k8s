@@ -85,6 +85,13 @@ else
     echo -e "${GREEN}✅ Addon Ingress habilitado com sucesso.${NC}"
 fi
 
+echo -e "${YELLOW}⏳ Aguardando o Ingress controller ficar pronto...${NC}"
+kubectl wait --namespace ingress-nginx \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller \
+  --timeout=90s
+echo -e "${GREEN}✅ Ingress controller está pronto!${NC}"
+
 NAMESPACE="microservices"
 echo "Garantindo que a criação do namespace '${NAMESPACE}'"
 kubectl apply -f k8s/namespace.yaml

@@ -1,0 +1,15 @@
+syntax = "proto3"; 
+ 
+package clientstream; 
+ 
+service StatsService { 
+  rpc ComputeAverage (stream NumberRequest) returns (AverageResponse); 
+} 
+ 
+message NumberRequest { 
+  int32 number = 1; 
+} 
+ 
+message AverageResponse { 
+  string message = 1; 
+}

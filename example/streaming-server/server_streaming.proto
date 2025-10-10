@@ -1,0 +1,14 @@
+syntax = "proto3"; 
+package serverstream; 
+ 
+service NumberService { 
+  rpc GenerateNumbers (NumberRequest) returns (stream NumberResponse); 
+} 
+ 
+message NumberRequest { 
+  int32 start = 1; 
+} 
+ 
+message NumberResponse { 
+  int32 number = 1; 
+} 

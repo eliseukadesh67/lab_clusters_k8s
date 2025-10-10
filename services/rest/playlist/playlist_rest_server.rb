@@ -233,7 +233,14 @@ error 404 do
   json_error('Not Found', 404)
 end
 
-error 500 do
+error 500 do |err| # A variável 'err' vai conter os detalhes da exceção
+  # Log detalhado para depuração no 'kubectl logs'
+  puts "!!! 500 Internal Server Error !!!"
+  puts "Classe do Erro: #{err.class}"
+  puts "Mensagem: #{err.message}"
+  puts "Backtrace:\n#{err.backtrace.join("\n  ")}"
+  
+  # Resposta para o cliente (continua a mesma)
   json_error('Internal Server Error', 500)
 end
 

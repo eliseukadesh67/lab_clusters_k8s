@@ -4,7 +4,8 @@ import path from "path";
 import fs from "fs";
 import crypto from "crypto";
 
-const getClient = (req) => (req.headers['x-communication-protocol'] === 'grpc' ? gRpcDownloadClient : restDownloadClient);
+// const getClient = (req) => (req.headers['x-communication-protocol'] === 'grpc' ? gRpcDownloadClient : restDownloadClient);
+const getClient = (req) => gRpcDownloadClient;
 
 const TEMP_DOWNLOAD_DIR = path.join(process.cwd(), "temp_downloads");
 // A verificação e criação da pasta já é feita pelo Dockerfile, mas manter aqui é seguro.

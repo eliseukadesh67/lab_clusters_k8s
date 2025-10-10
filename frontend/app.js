@@ -95,6 +95,8 @@ app.post('/videos/:id_playlist', async (req, res) => {
 app.post('/videos/delete/:id', async (req, res) => {
     const videoId = req.params.id;
     const { playlistId } = req.body;
+    console.log("CHEGUEI AQUI");
+    console.log(videoId);
     try {
         await axios.delete(`${API_URL}/api/playlists/videos/${videoId}`);
         res.redirect(`/playlists/${playlistId}`);

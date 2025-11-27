@@ -45,17 +45,6 @@ else
     echo -e "${GREEN}kubectl já está instalado.${NC}"
 fi
 
-# 3. Verificar e instalar o Minikube
-if ! command -v minikube &> /dev/null; then
-    echo "Minikube não encontrado. Instalando Minikube..."
-    curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-    sudo install minikube /usr/local/bin/
-    rm minikube
-    echo -e "${GREEN}Minikube instalado com sucesso.${NC}"
-else
-    echo -e "${GREEN}Minikube já está instalado.${NC}"
-fi
-
 if ! command -v node &> /dev/null; then
     echo "Node.js não encontrado. Instalando a versão LTS..."
     curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -

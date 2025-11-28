@@ -16,7 +16,7 @@ spec:
       containers:
       - name: grpc-playlist-service-container
         image: grpc-playlist-service:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Never
         ports:
         - name: grpc
           containerPort: 50051

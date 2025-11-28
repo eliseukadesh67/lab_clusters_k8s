@@ -16,7 +16,7 @@ spec:
       containers:
       - name: gateway-service-container
         image: gateway-service:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Never
         ports:
         - containerPort: 3000
         env: # Injeta as URLs dos serviços internos como variáveis de ambiente

@@ -1,0 +1,18 @@
+grafana:
+  adminPassword: admin
+  service:
+    type: ClusterIP
+
+prometheus:
+  service:
+    type: ClusterIP
+  prometheusSpec:
+    # Permite coletar ServiceMonitors no namespace dos microsserviços
+    serviceMonitorNamespaceSelector:
+      matchNames:
+        - microservices
+    podMonitorNamespaceSelector:
+      matchNames:
+        - microservices
+    # Mantém a seleção padrão por label "release: kube-prometheus-stack"
+    # (nossos ServiceMonitors já possuem esse label)

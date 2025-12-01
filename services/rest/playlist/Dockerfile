@@ -23,5 +23,6 @@ COPY . .
 # Expõe as portas
 EXPOSE 50051
 EXPOSE 5001
+EXPOSE 9464
 
 CMD ["bundle", "exec" , "ruby", "-I", "." ,"playlist_rest_server.rb"]

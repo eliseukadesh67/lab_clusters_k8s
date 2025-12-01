@@ -1,4 +1,8 @@
 require 'grpc'
+require 'prometheus/client'
+require 'prometheus/client/formats/text'
+require 'rack'
+require 'webrick'
 require 'sqlite3'
 require 'ulid'
 require_relative 'playlist_pb'
@@ -117,51 +121,142 @@ end
 
 class PlaylistServer < Playlist::PlaylistService::Service
   def initialize
+    super
+    setup_metrics
+  end
+
+  def setup_metrics
+    @registry = Prometheus::Client.registry
+    @grpc_requests_total = Prometheus::Client::Counter.new(
+      :grpc_server_requests_total,
+      docstring: 'Total de requisições gRPC por método e código',
+      labels: [:service, :grpc_method, :grpc_code]
+    )
+    @grpc_handling_seconds = Prometheus::Client::Histogram.new(
+      :grpc_server_handling_seconds,
+      docstring: 'Duração das requisições gRPC por método',
+      labels: [:service, :grpc_method],
+      buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
+    )
+
+    @registry.register(@grpc_requests_total)
+    @registry.register(@grpc_handling_seconds)
+
+    start_metrics_server
+  end
+
+  def start_metrics_server
+    app = proc do |env|
+      if env['PATH_INFO'] == '/metrics'
+        body = Prometheus::Client::Formats::Text.marshal(@registry)
+        [200, { 'Content-Type' => 'text/plain; version=0.0.4' }, [body]]
+      else
+        [404, { 'Content-Type' => 'text/plain' }, ['Not Found']]
+      end
+    end
+
+    Thread.new do
+      Rack::Handler::WEBrick.run(app, Host: '0.0.0.0', Port: 9464, AccessLog: [], Logger: WEBrick::Log.new($stdout, WEBrick::Log::INFO))
+    end
+  end
+
+  SERVICE = 'grpc-playlist'.freeze
+  def initialize
     @download_stub = Download::DownloadService::Stub.new(DOWNLOAD_SERVICE_ADDR, :this_channel_is_insecure)
   end
 
   def get_playlists(_empty_request, _call)
+    method = 'GetPlaylists'
+    start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     repo = PlaylistRepository.new
     playlists_models = repo.get_playlists
     items = playlists_models.map { |p_model| model_to_proto_playlist(p_model) }
-    Playlist::Playlists.new(items: items)
+    resp = Playlist::Playlists.new(items: items)
+    duration = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
+    @grpc_handling_seconds.observe({ service: SERVICE, grpc_method: method }, duration)
+    @grpc_requests_total.increment({ service: SERVICE, grpc_method: method, grpc_code: 'OK' })
+    resp
   end
 
   def get_playlists_by_id(request, _call)
+    method = 'GetPlaylistsById'
+    start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     repo = PlaylistRepository.new
     playlist_model = repo.get_playlists_by_id(request.id)
-    raise GRPC::NotFound.new("Playlist com ID '#{request.id}' não encontrada.") unless playlist_model
-    model_to_proto_playlist(playlist_model)
+    unless playlist_model
+      @grpc_requests_total.increment({ service: SERVICE, grpc_method: method, grpc_code: 'NOT_FOUND' })
+      raise GRPC::NotFound.new("Playlist com ID '#{request.id}' não encontrada.")
+    end
+    resp = model_to_proto_playlist(playlist_model)
+    duration = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
+    @grpc_handling_seconds.observe({ service: SERVICE, grpc_method: method }, duration)
+    @grpc_requests_total.increment({ service: SERVICE, grpc_method: method, grpc_code: 'OK' })
+    resp
   end
 
   def post_playlists(request, _call)
+    method = 'PostPlaylists'
+    start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     repo = PlaylistRepository.new
     new_playlist_model = repo.post_playlists(name: request.name)
-    Playlist::PlaylistId.new(id: new_playlist_model.id)
+    resp = Playlist::PlaylistId.new(id: new_playlist_model.id)
+    duration = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
+    @grpc_handling_seconds.observe({ service: SERVICE, grpc_method: method }, duration)
+    @grpc_requests_total.increment({ service: SERVICE, grpc_method: method, grpc_code: 'OK' })
+    resp
   end
 
   def patch_playlists(request, _call)
+    method = 'PatchPlaylists'
+    start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     repo = PlaylistRepository.new
     updated_playlist = repo.patch_playlists(id: request.id, name: request.name)
-    raise GRPC::NotFound.new("Playlist com ID '#{request.id}' não encontrada.") unless updated_playlist
-    Playlist::PlaylistId.new(id: updated_playlist.id)
+    unless updated_playlist
+      @grpc_requests_total.increment({ service: SERVICE, grpc_method: method, grpc_code: 'NOT_FOUND' })
+      raise GRPC::NotFound.new("Playlist com ID '#{request.id}' não encontrada.")
+    end
+    resp = Playlist::PlaylistId.new(id: updated_playlist.id)
+    duration = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
+    @grpc_handling_seconds.observe({ service: SERVICE, grpc_method: method }, duration)
+    @grpc_requests_total.increment({ service: SERVICE, grpc_method: method, grpc_code: 'OK' })
+    resp
   end
 
   def delete_playlists(request, _call)
+    method = 'DeletePlaylists'
+    start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     repo = PlaylistRepository.new
     was_deleted = repo.delete_playlists(id: request.id)
-    raise GRPC::NotFound.new("Playlist com ID '#{request.id}' não encontrada.") unless was_deleted
-    Playlist::Empty.new
+    unless was_deleted
+      @grpc_requests_total.increment({ service: SERVICE, grpc_method: method, grpc_code: 'NOT_FOUND' })
+      raise GRPC::NotFound.new("Playlist com ID '#{request.id}' não encontrada.")
+    end
+    resp = Playlist::Empty.new
+    duration = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
+    @grpc_handling_seconds.observe({ service: SERVICE, grpc_method: method }, duration)
+    @grpc_requests_total.increment({ service: SERVICE, grpc_method: method, grpc_code: 'OK' })
+    resp
   end
 
   def get_videos_by_id(request, _call)
+    method = 'GetVideosById'
+    start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     repo = PlaylistRepository.new
     video_model = repo.get_videos_by_id(request.id)
-    raise GRPC::NotFound.new("Vídeo com ID '#{request.id}' não encontrado.") unless video_model
-    model_to_proto_video(video_model)
+    unless video_model
+      @grpc_requests_total.increment({ service: SERVICE, grpc_method: method, grpc_code: 'NOT_FOUND' })
+      raise GRPC::NotFound.new("Vídeo com ID '#{request.id}' não encontrado.")
+    end
+    resp = model_to_proto_video(video_model)
+    duration = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
+    @grpc_handling_seconds.observe({ service: SERVICE, grpc_method: method }, duration)
+    @grpc_requests_total.increment({ service: SERVICE, grpc_method: method, grpc_code: 'OK' })
+    resp
   end
 
   def post_videos(request, _call)
+    method = 'PostVideos'
+    start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     repo = PlaylistRepository.new
     raise GRPC::NotFound.new("Playlist com ID '#{request.playlist_id}' não encontrada.") unless repo.get_id_playlists(request.playlist_id)
 
@@ -175,19 +270,34 @@ class PlaylistServer < Playlist::PlaylistService::Service
         duration: metadata.duration,
         thumbnail_url: metadata.thumbnail_url
       )
-      Playlist::VideoId.new(id: new_video.id)
+      resp = Playlist::VideoId.new(id: new_video.id)
+      duration = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
+      @grpc_handling_seconds.observe({ service: SERVICE, grpc_method: method }, duration)
+      @grpc_requests_total.increment({ service: SERVICE, grpc_method: method, grpc_code: 'OK' })
+      resp
     rescue GRPC::BadStatus => e
+      @grpc_requests_total.increment({ service: SERVICE, grpc_method: method, grpc_code: e.code || 'ERROR' })
       raise GRPC::InvalidArgument.new("Erro ao obter metadados do vídeo: #{e.details}")
     rescue SQLite3::ConstraintException
+      @grpc_requests_total.increment({ service: SERVICE, grpc_method: method, grpc_code: 'ALREADY_EXISTS' })
       raise GRPC::AlreadyExists.new("Vídeo com URL '#{request.url}' já existe na playlist.")
     end
   end
   
   def delete_videos(request, _call)
+    method = 'DeleteVideos'
+    start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     repo = PlaylistRepository.new
     was_deleted = repo.delete_videos(id: request.id)
-    raise GRPC::NotFound.new("Vídeo não encontrado na playlist.") unless was_deleted
-    Playlist::Empty.new
+    unless was_deleted
+      @grpc_requests_total.increment({ service: SERVICE, grpc_method: method, grpc_code: 'NOT_FOUND' })
+      raise GRPC::NotFound.new("Vídeo não encontrado na playlist.")
+    end
+    resp = Playlist::Empty.new
+    duration = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
+    @grpc_handling_seconds.observe({ service: SERVICE, grpc_method: method }, duration)
+    @grpc_requests_total.increment({ service: SERVICE, grpc_method: method, grpc_code: 'OK' })
+    resp
   end
 
   private

@@ -3,11 +3,16 @@ kind: Service
 metadata:
   name: gateway-service
   namespace: microservices
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "3000"
 spec:
   selector:
     app: gateway-service
   type: ClusterIP 
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 3000 # O Ingress vai se comunicar com o serviço nesta porta
       targetPort: 3000 # A porta do contêiner do gateway

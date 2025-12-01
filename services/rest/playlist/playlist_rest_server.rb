@@ -1,6 +1,8 @@
 require 'sinatra'
 require 'json'
 require 'net/http'
+require 'prometheus/client'
+require 'prometheus/client/formats/text'
 require_relative 'playlist_repository'
 
 # Configure Sinatra
@@ -11,6 +13,49 @@ set :show_exceptions, false
 $stdout.sync = true
 
 DOWNLOAD_SERVICE_URL = ENV['DOWNLOADS_REST_URL']
+
+# Prometheus registry and metrics
+$registry = Prometheus::Client.registry
+$http_requests_total = Prometheus::Client::Counter.new(
+  :http_requests_total,
+  docstring: 'Total de requisições HTTP',
+  labels: [:service, :route, :method, :status]
+)
+$http_request_duration_seconds = Prometheus::Client::Histogram.new(
+  :http_request_duration_seconds,
+  docstring: 'Duração das requisições HTTP',
+  labels: [:service, :route, :method],
+  buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
+)
+
+begin
+  $registry.register($http_requests_total)
+  $registry.register($http_request_duration_seconds)
+rescue Prometheus::Client::Registry::AlreadyRegisteredError
+  # ignore in case of reloading
+end
+
+SERVICE_LABEL = 'rest-playlist'.freeze
+
+before do
+  env['prom.start_time'] = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+end
+
+after do
+  begin
+    route = (env['sinatra.route']&.split(' ', 2)&.last) || request.path_info
+    method = request.request_method
+    status = response.status.to_s
+    start = env['prom.start_time']
+    if start
+      duration = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
+      $http_request_duration_seconds.observe({ service: SERVICE_LABEL, route: route, method: method }, duration)
+    end
+    $http_requests_total.increment({ service: SERVICE_LABEL, route: route, method: method, status: status })
+  rescue StandardError
+    # ignore metrics errors
+  end
+end
 
 # Helper methods
 helpers do
@@ -75,6 +120,12 @@ end
 # Health check
 get '/health' do
   json_response({ status: 'healthy', service: 'playlist-service' })
+end
+
+# Metrics endpoint
+get '/metrics' do
+  content_type 'text/plain'
+  Prometheus::Client::Formats::Text.marshal($registry)
 end
 
 # ========================================
@@ -161,13 +212,9 @@ end
 
 # Get video by ID
 get '/videos/:id' do
-  repo = PlaylistRepository.newlass PlaylistRepository
-  DB_FILE = 'playlists.db'
-
-  def initialize
-    @db = SQLite3:
+  repo = PlaylistRepository.new
   video_model = repo.get_videos_by_id(params[:id])
-  
+
   if video_model
     json_response(model_to_hash_video(video_model))
   else

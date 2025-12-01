@@ -15,11 +15,13 @@ spec:
     spec:
       containers:
       - name: grpc-playlist-service-container
-        image: kadesh67/grpc-playlist-service:latest
+        image: zenildavieira/grpc-playlist-service:latest
         imagePullPolicy: Always
         ports:
         - name: grpc
           containerPort: 50051
+        - name: metrics
+          containerPort: 9464
         env:
         - name: DOWNLOADS_GRPC_URL
           value: "grpc-download-service:50052"

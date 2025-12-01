@@ -5,6 +5,7 @@ import pinoHttp from 'pino-http';
 import morgan from 'morgan';
 import setupRoutes from './routes.js';
 import errorHandler from './middlewares/errorHandler.js';
+import { metricsMiddleware, metricsHandler } from './metrics.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,8 +35,12 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(metricsMiddleware);
 
 setupRoutes(app);
+
+// Endpoint de métricas Prometheus
+app.get('/metrics', metricsHandler);
 
 app.use((req, res, next) => {
   res.status(404).json({ error: 'Not Found', message: 'A rota solicitada não existe.' });

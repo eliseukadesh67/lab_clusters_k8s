@@ -8,11 +8,28 @@ import time
 import download_pb2
 import download_pb2_grpc
 import logging
+from prometheus_client import Counter, Histogram, start_http_server
 
 logging.basicConfig(
     level=logging.INFO, 
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
+
+# Prometheus metrics
+GRPC_REQUESTS_TOTAL = Counter(
+    'grpc_server_requests_total',
+    'Total de requisições gRPC por método e código',
+    ['service', 'grpc_method', 'grpc_code']
+)
+
+GRPC_HANDLING_SECONDS = Histogram(
+    'grpc_server_handling_seconds',
+    'Duração das requisições gRPC por método',
+    ['service', 'grpc_method'],
+    buckets=[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
+)
+
+SERVICE_LABEL = 'grpc-download'
 
 # Cria o diretório de downloads se não existir
 if not os.path.exists('downloads'):
@@ -24,6 +41,7 @@ class DownloadThreadError(Exception):
 class DownloadService(download_pb2_grpc.DownloadServiceServicer):
 
     def GetMetadata(self, request, context):
+        method = 'GetMetadata'
         start = time.time()
         ydl_opts = {'quiet': True, 'no_warnings': True}
         try:
@@ -39,19 +57,26 @@ class DownloadService(download_pb2_grpc.DownloadServiceServicer):
                 context.set_trailing_metadata((('extraction-time-seconds', f"{elapsed:.3f}"),))
             except Exception:
                 pass
-            return download_pb2.Metadata(
+            resp = download_pb2.Metadata(
                 title=title,
                 duration=duration,
                 thumbnail_url=thumbnail_url,
                 total_bytes=total_bytes
             )
+            elapsed = time.time() - start
+            GRPC_HANDLING_SECONDS.labels(SERVICE_LABEL, method).observe(elapsed)
+            GRPC_REQUESTS_TOTAL.labels(SERVICE_LABEL, method, 'OK').inc()
+            return resp
         except Exception as e:
             context.set_code(grpc.StatusCode.NOT_FOUND)
             context.set_details(f"Não foi possível extrair metadados: {e}")
+            GRPC_REQUESTS_TOTAL.labels(SERVICE_LABEL, method, 'NOT_FOUND').inc()
             return download_pb2.Metadata()
 
     def GetFile(self, request, context):
         progress_queue = queue.Queue()
+        method = 'GetFile'
+        start_total = time.time()
 
         # --- MUDANÇA 1: O hook agora também pega o total de bytes ---
         def progress_hook(d):
@@ -124,11 +149,15 @@ class DownloadService(download_pb2_grpc.DownloadServiceServicer):
         while True:
             item = progress_queue.get()
             if item is None:
+                elapsed = time.time() - start_total
+                GRPC_HANDLING_SECONDS.labels(SERVICE_LABEL, method).observe(elapsed)
+                GRPC_REQUESTS_TOTAL.labels(SERVICE_LABEL, method, 'OK').inc()
                 break
             
             if isinstance(item, DownloadThreadError):
                 context.set_code(grpc.StatusCode.INTERNAL)
                 context.set_details(str(item))
+                GRPC_REQUESTS_TOTAL.labels(SERVICE_LABEL, method, 'INTERNAL').inc()
                 raise item
 
             # Envia o item (seja progresso ou chunk de dados) para o cliente
@@ -141,6 +170,12 @@ def serve():
     server.add_insecure_port(f'[::]:{port}')
     server.start()
     logging.info(f"✅ Servidor gRPC rodando na porta {port}")
+    # Exposição de métricas HTTP em 9464
+    try:
+        start_http_server(9464)
+        logging.info("📈 Métricas Prometheus expostas em :9464/metrics")
+    except Exception as e:
+        logging.info(f"Falha ao iniciar servidor de métricas: {e}")
     try:
         server.wait_for_termination()
     except KeyboardInterrupt:

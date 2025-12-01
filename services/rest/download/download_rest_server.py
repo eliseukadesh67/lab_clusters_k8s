@@ -5,6 +5,13 @@ Provides video metadata extraction and download functionality via REST API
 """
 
 from flask import Flask, request, jsonify, Response, stream_with_context
+from prometheus_client import (
+    Counter,
+    Histogram,
+    generate_latest,
+    CONTENT_TYPE_LATEST,
+)
+import time
 import os
 import yt_dlp
 import threading
@@ -12,6 +19,45 @@ import queue
 import json
 
 app = Flask(__name__)
+
+# Prometheus metrics
+HTTP_REQUESTS_TOTAL = Counter(
+    'http_requests_total',
+    'Total de requisições HTTP',
+    ['service', 'endpoint', 'method', 'status'],
+)
+HTTP_REQUEST_DURATION_SECONDS = Histogram(
+    'http_request_duration_seconds',
+    'Duração das requisições HTTP',
+    ['service', 'endpoint', 'method'],
+    buckets=[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
+)
+
+SERVICE_LABEL = 'rest-download'
+
+
+@app.before_request
+def _start_timer():
+    request._start_time = time.time()
+
+
+@app.after_request
+def _record_metrics(response):
+    try:
+        endpoint = request.endpoint or request.path or 'unknown'
+        method = request.method
+        duration = None
+        if hasattr(request, '_start_time'):
+            duration = max(time.time() - request._start_time, 0)
+            HTTP_REQUEST_DURATION_SECONDS.labels(
+                SERVICE_LABEL, endpoint, method
+            ).observe(duration)
+        HTTP_REQUESTS_TOTAL.labels(
+            SERVICE_LABEL, endpoint, method, str(response.status_code)
+        ).inc()
+    except Exception:
+        pass
+    return response
 
 # Ensure downloads directory exists
 DOWNLOADS_DIR = 'downloads'
@@ -67,7 +113,7 @@ def get_video_metadata():
         }), 200
         
     except Exception as e:
-        return jsonify({'error': f'Não foi possível extrair metadados: {str(e)}'}), 404
+        return jsonify({'error': 'Não foi possível extrair metadados'}), 404
 
 
 @app.route('/downloads', methods=['POST'])
@@ -162,6 +208,10 @@ def download_video():
 def health_check():
     """Health check endpoint"""
     return jsonify({'status': 'healthy', 'service': 'download-service'}), 200
+
+@app.route('/metrics', methods=['GET'])
+def metrics():
+    return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 if __name__ == '__main__':
     print("=" * 60)

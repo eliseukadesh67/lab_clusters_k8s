@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: grpc-download-service
   namespace: microservices
+  labels:
+    app: grpc-download-service
 spec:
   selector:
     app: grpc-download-service

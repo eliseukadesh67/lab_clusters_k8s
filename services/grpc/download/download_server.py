@@ -172,7 +172,7 @@ def serve():
     logging.info(f"✅ Servidor gRPC rodando na porta {port}")
     # Exposição de métricas HTTP em 9464
     try:
-        start_http_server(9464)
+        start_http_server(9464, addr="0.0.0.0")
         logging.info("📈 Métricas Prometheus expostas em :9464/metrics")
     except Exception as e:
         logging.info(f"Falha ao iniciar servidor de métricas: {e}")

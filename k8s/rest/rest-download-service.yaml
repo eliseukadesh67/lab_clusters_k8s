@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: rest-download-service
   namespace: microservices
+  labels:
+    app: rest-download-service
   annotations:
     prometheus.io/scrape: "true"
     prometheus.io/path: "/metrics"

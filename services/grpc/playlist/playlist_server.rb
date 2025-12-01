@@ -120,11 +120,6 @@ class PlaylistRepository
 end
 
 class PlaylistServer < Playlist::PlaylistService::Service
-  def initialize
-    super
-    setup_metrics
-  end
-
   def setup_metrics
     @registry = Prometheus::Client.registry
     @grpc_requests_total = Prometheus::Client::Counter.new(
@@ -162,6 +157,8 @@ class PlaylistServer < Playlist::PlaylistService::Service
 
   SERVICE = 'grpc-playlist'.freeze
   def initialize
+    super
+    setup_metrics
     @download_stub = Download::DownloadService::Stub.new(DOWNLOAD_SERVICE_ADDR, :this_channel_is_insecure)
   end
 

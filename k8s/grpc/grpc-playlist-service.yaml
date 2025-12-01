@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: grpc-playlist-service
   namespace: microservices
+  labels:
+    app: grpc-playlist-service
 spec:
   selector:
     app: grpc-playlist-service

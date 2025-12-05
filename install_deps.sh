@@ -45,6 +45,17 @@ else
     echo -e "${GREEN}kubectl já está instalado.${NC}"
 fi
 
+# 3. Verificar e instalar o Minikube
+if ! command -v minikube &> /dev/null; then
+    echo "Minikube não encontrado. Instalando Minikube..."
+    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+    sudo install minikube-linux-amd64 /usr/local/bin/minikube
+    rm minikube-linux-amd64
+    echo -e "${GREEN}Minikube instalado com sucesso.${NC}"
+else
+    echo -e "${GREEN}Minikube já está instalado.${NC}"
+fi
+
 if ! command -v node &> /dev/null; then
     echo "Node.js não encontrado. Instalando a versão LTS..."
     curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
@@ -52,6 +63,15 @@ if ! command -v node &> /dev/null; then
     echo -e "${GREEN}Node.js e npm instalados com sucesso.${NC}"
 else
     echo -e "${GREEN}Node.js e npm já estão instalados.${NC}"
+fi
+
+# 5. Verificar e instalar o Helm
+if ! command -v helm &> /dev/null; then
+    echo "Helm não encontrado. Instalando Helm..."
+    curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    echo -e "${GREEN}Helm instalado com sucesso.${NC}"
+else
+    echo -e "${GREEN}Helm já está instalado.${NC}"
 fi
 
 echo -e "\n${GREEN}Verificação de dependências concluída!${NC}"

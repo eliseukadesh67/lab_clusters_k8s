@@ -20,3 +20,10 @@ spec:
         ports:
         - name: grpc
           containerPort: 50052
+        resources:
+          requests:
+            cpu: "200m"  # Requisita 0.2 CPU core (200 millicores)
+            memory: "128Mi"
+          limits:
+            cpu: "500m"  # Limita a 0.5 CPU core
+            memory: "256Mi"

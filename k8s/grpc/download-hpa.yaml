@@ -1,0 +1,24 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: download-service-hpa
+  namespace: microservices # Mesma namespace do Deployment
+spec:
+  # 1. Alvo do HPA (O Deployment a ser escalado)
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: grpc-download-deployment 
+  
+  # 2. Limites de Escala
+  minReplicas: 3 # Mínimo de Pods (recomenda-se > 1 para HA e Anti-Afinidade)
+  maxReplicas: 5 # Máximo de Pods que o HPA pode criar
+  
+  # 3. Métricas de Escalonamento
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization # Baseado na porcentagem de uso do request de CPU
+        averageUtilization: 50 # O HPA escalará se o uso médio for > 50%

@@ -1,0 +1,16 @@
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+kubernetesVersion: v1.34.2 # Use a versão do seu cluster atual
+clusterName: kubernetes-cluster-lab
+controlPlaneEndpoint: "master:6443" # Use o nome DNS ou IP do seu master
+
+---
+
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: <IP_PRIVADO_DO_MASTER> # Ex: 192.168.1.10
+    bindPort: 6443
+    nodeRegistration:
+      criSocket: "unix:///var/run/containerd/containerd.sock" # Altere se usar outro runtime
+        name: master

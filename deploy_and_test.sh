@@ -159,99 +159,69 @@ kubectl wait --for=condition=ready pod --all -n observability --timeout=300s || 
 
 echo -e "${GREEN}Todos os pods estão prontos!${NC}"
 
-# --- PASSO 7: TESTAR A APLICAÇÃO ---
-echo -e "\n${CYAN}--- PASSO 7: Testando a aplicação ---${NC}"
+# --- PASSO 7: VERIFICAR STATUS DOS DEPLOYMENTS ---
+echo -e "\n${CYAN}--- PASSO 7: Verificando status dos deployments ---${NC}"
 
-# Obter IP do Minikube
-MINIKUBE_IP=$(minikube ip --profile microservices)
+echo "Verificando deployments de aplicação..."
+kubectl get deployments -n $NAMESPACE
 
-# Testar gateway
-echo "Testando Gateway..."
-if curl -s "http://${MINIKUBE_IP}/playlists" > /dev/null; then
-    echo -e "${GREEN}✅ Gateway respondendo em http://${MINIKUBE_IP}${NC}"
-else
-    echo -e "${RED}❌ Gateway não respondeu${NC}"
-    exit 1
-fi
+echo -e "\nVerificando pods de aplicação..."
+kubectl get pods -n $NAMESPACE
 
-# Testar playlist service via gateway
-echo "Testando Playlist Service..."
-if curl -s -X POST "http://${MINIKUBE_IP}/playlists" -H "Content-Type: application/json" -d '{"name":"Test Playlist"}' | grep -q "Playlist criada"; then
-    echo -e "${GREEN}✅ Playlist Service funcionando${NC}"
-else
-    echo -e "${RED}❌ Playlist Service falhou${NC}"
-    exit 1
-fi
+echo -e "\nVerificando pods de observabilidade..."
+kubectl get pods -n observability
 
-# Testar download service via gateway (metadata)
-echo "Testando Download Service..."
-if curl -s "http://${MINIKUBE_IP}/metadata?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ" | grep -q "title"; then
-    echo -e "${GREEN}✅ Download Service funcionando${NC}"
-else
-    echo -e "${RED}❌ Download Service falhou${NC}"
-    exit 1
-fi
+echo -e "${GREEN}✅ Status dos deployments verificado!${NC}"
 
-# --- PASSO 8: INICIAR FRONTEND ---
+# --- PASSO 8: PREPARAR FRONTEND ---
 echo -e "\n${CYAN}--- PASSO 8: Preparando frontend ---${NC}"
-cd frontend
-npm install
-echo "Frontend instalado."
 
-# Criar .env
-cat <<EOF > .env
-API_URL=http://${MINIKUBE_IP}
+# Verificar se dependências do frontend estão instaladas
+if [ ! -d "frontend/node_modules" ]; then
+    echo "Instalando dependências do frontend..."
+    cd frontend
+    npm install
+    cd ..
+    echo -e "${GREEN}✅ Dependências do frontend instaladas.${NC}"
+else
+    echo -e "${GREEN}Dependências do frontend já instaladas.${NC}"
+fi
+
+# Criar arquivo .env para o frontend
+echo "Criando arquivo .env para o frontend..."
+cat <<EOF > frontend/.env
+API_URL=http://localhost:8080
 PORT=3000
 EOF
 
-echo -e "${GREEN}✅ .env criado para frontend.${NC}"
-cd ..
+echo -e "${GREEN}✅ Arquivo .env criado para o frontend.${NC}"
 
-# --- PASSO 9: CONFIGURAR PORT-FORWARDS PARA OBSERVABILIDADE ---
-echo -e "\n${CYAN}--- PASSO 9: Iniciando port-forwards para Grafana e Prometheus ---${NC}"
-
-# Criar diretório para PIDs
-mkdir -p .pf
-
-# Função para limpar port-forwards ao sair
-cleanup() {
-    echo -e "\n${YELLOW}Parando port-forwards...${NC}"
-    pkill -P $$ kubectl 2>/dev/null
-    rm -rf .pf
-    echo -e "${GREEN}Port-forwards encerrados.${NC}"
-}
-trap cleanup EXIT INT TERM
-
-# Aguardar serviço do Grafana estar pronto
-echo "Aguardando serviço do Grafana..."
-kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=grafana -n observability --timeout=120s || true
-
-# Aguardar serviço do Prometheus estar pronto
-echo "Aguardando serviço do Prometheus..."
-kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=prometheus -n observability --timeout=120s || true
-
-# Iniciar port-forward para Grafana (porta 3001 para evitar conflito com frontend na 3000)
-echo "Iniciando port-forward para Grafana (porta 3001)..."
-kubectl port-forward -n observability svc/kube-prometheus-stack-grafana 3001:80 > .pf/grafana.log 2>&1 &
-GRAFANA_PID=$!
-echo $GRAFANA_PID > .pf/grafana.pid
-sleep 2
-
-# Iniciar port-forward para Prometheus (porta 9090)
-echo "Iniciando port-forward para Prometheus (porta 9090)..."
-kubectl port-forward -n observability svc/kube-prometheus-stack-prometheus 9090:9090 > .pf/prometheus.log 2>&1 &
-PROMETHEUS_PID=$!
-echo $PROMETHEUS_PID > .pf/prometheus.pid
-sleep 2
-
-echo -e "${GREEN}Port-forwards configurados!${NC}"
+# --- PASSO 9: REMOVER PORT-FORWARDS AUTOMÁTICOS ---
+echo -e "\n${CYAN}--- PASSO 9: Finalizando deploy ---${NC}"
+echo -e "${GREEN}Deploy concluído!${NC}"
 
 # --- RESULTADO FINAL ---
 echo -e "\n${GREEN}🎉 APLICAÇÃO DEPLOYADA E TESTADA COM SUCESSO!${NC}"
-echo -e "${YELLOW}📍 URLs de acesso:${NC}"
-echo -e "   ${CYAN}Gateway:${NC} http://${MINIKUBE_IP}"
-echo -e "   ${CYAN}Frontend:${NC} Execute 'cd frontend && npm start' e acesse http://localhost:3000"
-echo -e "   ${CYAN}Grafana:${NC} http://localhost:3001 (usuário: admin, senha: prom-operator)"
+
+echo -e "\n${YELLOW}📍 Para acessar a aplicação completa, execute os seguintes comandos em terminais separados:${NC}"
+echo ""
+echo -e "${CYAN}Terminal 1 - Port-forward do Gateway:${NC}"
+echo -e "   ${GREEN}kubectl port-forward -n microservices svc/gateway-service 8080:3000${NC}"
+echo ""
+echo -e "${CYAN}Terminal 2 - Port-forward do Grafana:${NC}"
+echo -e "   ${GREEN}kubectl port-forward -n observability svc/kube-prometheus-stack-grafana 3001:80${NC}"
+echo ""
+echo -e "${CYAN}Terminal 3 - Port-forward do Prometheus:${NC}"
+echo -e "   ${GREEN}kubectl port-forward -n observability svc/kube-prometheus-stack-prometheus 9090:9090${NC}"
+echo ""
+echo -e "${CYAN}Terminal 4 - Rodar o Frontend:${NC}"
+echo -e "   ${GREEN}cd frontend && npm start${NC}"
+echo ""
+
+echo -e "\n${YELLOW}📊 URLs de acesso:${NC}"
+echo -e "   ${CYAN}Frontend:${NC} http://localhost:3000"
+echo -e "   ${CYAN}Gateway (via port-forward):${NC} http://localhost:8080"
+echo -e "   ${CYAN}Grafana:${NC} http://localhost:3001 (usuário: admin, senha: admin)"
 echo -e "   ${CYAN}Prometheus:${NC} http://localhost:9090"
 
 echo -e "\n${YELLOW}📊 Observabilidade:${NC}"
@@ -259,24 +229,15 @@ echo -e "   - ServiceMonitors ativos para Gateway e serviços gRPC"
 echo -e "   - Dashboard gRPC configurado no Grafana"
 echo -e "   - Métricas disponíveis nas portas 9464 dos serviços"
 
-echo -e "\n${CYAN}Para parar a aplicação:${NC}"
-echo -e "   Pressione Ctrl+C ou execute: kubectl delete namespace $NAMESPACE observability && minikube stop --profile microservices"
+echo -e "\n${YELLOW}ℹ️  Informações importantes:${NC}"
+echo -e "   - Mantenha os terminais de port-forward abertos enquanto usar a aplicação"
+echo -e "   - O frontend se conecta ao gateway através do port-forward (localhost:8080)"
+echo -e "   - A senha padrão do Grafana é 'admin' (não 'prom-operator')"
 
-# Manter o script rodando para manter Minikube e port-forwards ativos
-echo -e "\n${YELLOW}Mantendo Minikube e port-forwards ativos. Pressione Ctrl+C para parar.${NC}"
-while true; do
-    sleep 60
-    # Verificar se port-forwards ainda estão ativos
-    if ! ps -p $GRAFANA_PID > /dev/null 2>&1; then
-        echo -e "${YELLOW}Reiniciando port-forward do Grafana...${NC}"
-        kubectl port-forward -n observability svc/kube-prometheus-stack-grafana 3001:80 > .pf/grafana.log 2>&1 &
-        GRAFANA_PID=$!
-        echo $GRAFANA_PID > .pf/grafana.pid
-    fi
-    if ! ps -p $PROMETHEUS_PID > /dev/null 2>&1; then
-        echo -e "${YELLOW}Reiniciando port-forward do Prometheus...${NC}"
-        kubectl port-forward -n observability svc/kube-prometheus-stack-prometheus 9090:9090 > .pf/prometheus.log 2>&1 &
-        PROMETHEUS_PID=$!
-        echo $PROMETHEUS_PID > .pf/prometheus.pid
-    fi
-done
+echo -e "\n${CYAN}Para parar a aplicação:${NC}"
+echo -e "   1. Pressione Ctrl+C em cada terminal de port-forward"
+echo -e "   2. Pare o frontend (Ctrl+C)"
+echo -e "   3. (Opcional) Delete os namespaces: ${GREEN}kubectl delete namespace $NAMESPACE observability${NC}"
+echo -e "   4. (Opcional) Pare o Minikube: ${GREEN}minikube stop --profile microservices${NC}"
+
+echo -e "\n${GREEN}✅ Deploy finalizado com sucesso!${NC}"

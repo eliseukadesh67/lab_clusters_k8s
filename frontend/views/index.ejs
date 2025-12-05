@@ -35,8 +35,8 @@
         <div class="card-body text-center">
             <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
             <h5 class="card-title text-success">Download Concluído!</h5>
-            <p class="card-text text-muted">O download do arquivo foi iniciado automaticamente.</p>
-            <small class="text-muted">Se o download não iniciou, verifique as configurações do seu navegador.</small>
+            <p class="card-text text-muted">O vídeo foi processado e baixado com sucesso.</p>
+            <small class="text-muted">Verifique a pasta de Downloads do seu navegador.</small>
         </div>
     </div>
 
@@ -140,19 +140,33 @@
 
   // --- Função chamada ao receber o evento 'completed' via SSE ---
   async function downloadCompleted(downloadUrl, fileId) {
-      
       console.log('Backend concluiu. Iniciando download no cliente do fileId:', fileId);
-      document.getElementById('progressCard').classList.add('d-none');
-      document.getElementById('successCard').classList.remove('d-none');
-
-      const finalDownloadUrl = `${GATEWAY_BASE_URL}/${downloadUrl}`;
-
-      await downloadFile(finalDownloadUrl, fileId);
       
+      // Marca como completo ANTES de fechar a conexão SSE
+      downloadIsComplete = true;
+      
+      // Fecha a conexão SSE imediatamente
       if (eventSource) {
           eventSource.close();
           eventSource = null;
       }
+      
+      // Atualiza a UI para mostrar 100%
+      const progressBar = document.getElementById('progressBar');
+      progressBar.style.width = '100%';
+      progressBar.setAttribute('aria-valuenow', 100);
+      progressBar.textContent = '100%';
+      
+      // Oculta o card de progresso e mostra o de sucesso
+      document.getElementById('progressCard').classList.add('d-none');
+      document.getElementById('successCard').classList.remove('d-none');
+      
+      // Reseta o botão
+      resetButton();
+
+      // Baixa o arquivo
+      const finalDownloadUrl = `${GATEWAY_BASE_URL}/${downloadUrl}`;
+      await downloadFile(finalDownloadUrl, fileId);
   }
 
   // --- Event Listener do Formulário ---

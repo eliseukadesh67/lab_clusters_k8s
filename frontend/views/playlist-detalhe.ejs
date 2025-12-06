@@ -147,7 +147,7 @@
   </div>
 
   <script>
-    const GATEWAY_BASE_URL = 'http://192.168.49.2';
+    const GATEWAY_BASE_URL = '<%= gatewayBaseUrl %>';
     let currentEventSource = null;
     let currentVideoId = null;
     let downloadIsComplete = false;
@@ -258,12 +258,15 @@
         currentEventSource = null;
       }
 
-      // Hide progress modal
-      bootstrap.Modal.getInstance(document.getElementById('downloadModal')).hide();
+      // Hide progress modal (com segurança)
+      const progressEl = document.getElementById('downloadModal');
+      const progressInst = bootstrap.Modal.getInstance(progressEl) || new bootstrap.Modal(progressEl);
+      try { progressInst.hide(); } catch (_) {}
 
       // Show success modal
-      const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-      successModal.show();
+      const successEl = document.getElementById('successModal');
+      const successModal = bootstrap.Modal.getInstance(successEl) || new bootstrap.Modal(successEl);
+      try { successModal.show(); } catch (_) {}
 
       const fileId = downloadUrl.split('/file/')[1] || 'video.mp4';
       const finalDownloadUrl = `${GATEWAY_BASE_URL}/${downloadUrl}`;
@@ -273,8 +276,9 @@
         await downloadFile(finalDownloadUrl, fileId);
 
         // 2. SOMENTE SE a linha acima NÃO FALHAR, mostre o sucesso
-        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-        successModal.show();
+        const successEl2 = document.getElementById('successModal');
+        const successModal2 = bootstrap.Modal.getInstance(successEl2) || new bootstrap.Modal(successEl2);
+        try { successModal2.show(); } catch (_) {}
 
       } catch (error) {
         // 3. Se a operação crítica falhar (dentro de downloadFile), mostre o erro
@@ -293,13 +297,16 @@
         currentEventSource = null;
       }
 
-      // Hide progress modal
-      bootstrap.Modal.getInstance(document.getElementById('downloadModal')).hide();
+      // Hide progress modal com segurança
+      const progEl = document.getElementById('downloadModal');
+      const progInst = bootstrap.Modal.getInstance(progEl) || new bootstrap.Modal(progEl);
+      try { progInst.hide(); } catch (_) {}
 
       // Show error modal
       document.getElementById('modalErrorMessage').textContent = message;
-      const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-      errorModal.show();
+      const errorEl = document.getElementById('errorModal');
+      const errorModal = bootstrap.Modal.getInstance(errorEl) || new bootstrap.Modal(errorEl);
+      try { errorModal.show(); } catch (_) {}
 
       // Reset button
       resetDownloadButton();
@@ -309,12 +316,22 @@
       const modals = ['downloadModal', 'successModal', 'errorModal'];
       modals.forEach(modalId => {
         const modalElement = document.getElementById(modalId);
-        const modalInstance = bootstrap.Modal.getInstance(modalElement);
-        if (modalInstance) {
-          modalInstance.hide();
-        }
+        if (!modalElement) return;
+        const modalInstance = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+        try { modalInstance.hide(); } catch (_) {}
       });
     }
+
+    // Garantir que fechar no "X" não deixe estados quebrados
+    ['downloadModal','successModal','errorModal'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('hidden.bs.modal', () => {
+        // Reabilita botão se necessário e encerra SSE
+        if (currentEventSource) { try { currentEventSource.close(); } catch (_) {} currentEventSource = null; }
+        resetDownloadButton();
+      });
+    });
 
     function resetProgress() {
       const progressBar = document.getElementById('modalProgressBar');

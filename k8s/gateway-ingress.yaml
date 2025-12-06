@@ -6,6 +6,12 @@ metadata:
   annotations:
     # Esta anotação é específica para o Nginx Ingress Controller e é muito comum
     nginx.ingress.kubernetes.io/rewrite-target: /
+    # --- NOVAS ANOTAÇÕES PARA DOWNLOADS/STREAMS LONGOS ---
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "300" # Conexão (5 minutos)
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"    # Envio de dados (5 minutos)
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"     # Leitura de resposta (5 minutos)
+    # Recomendado para otimizar conexões keep-alive com
+    nginx.ingress.kubernetes.io/upstream-keepalive: "32"
 spec:
   ingressClassName: nginx # <--- ADICIONE ESTA LINHA
   rules:

@@ -158,6 +158,125 @@ kubectl delete namespace microservices observability
 minikube stop --profile microservices
 ```
 
+## 🚀 Início Rápido
+
+Após reiniciar o computador:
+
+```bash
+# 1. Abrir WSL e navegar para o projeto
+cd /mnt/c/Users/Zenilda/OneDrive/Documentos/@_@FGA/wsGitHub/2025-2_PSPD_lab_cluster_k8s/lab_clusters_k8s
+
+# 2. Deploy automático completo
+./deploy_and_test.sh
+```
+
+**Deixe esse terminal aberto!** Ele mantém Minikube e port-forwards ativos.
+
+### Iniciar Frontend (Novo Terminal)
+
+```bash
+cd frontend
+npm start
+```
+
+### URLs de Acesso
+
+| Serviço | URL | Credenciais |
+|---------|-----|-------------|
+| Gateway | `http://<MINIKUBE_IP>` | - |
+| Frontend | `http://localhost:3000` | - |
+| Grafana | `http://localhost:3001` | admin / prom-operator |
+| Prometheus | `http://localhost:9090` | - |
+
+## 📋 Checklist de Deploy
+
+Use este checklist sempre que executar a aplicação:
+
+### Pré-Requisitos
+- [ ] Docker Desktop rodando no Windows
+- [ ] WSL aberto e funcionando
+- [ ] Diretório correto do projeto
+
+### Passos do Deploy
+- [ ] Executar `./deploy_and_test.sh`
+- [ ] Verificar instalação de dependências
+- [ ] Confirmar Minikube iniciado
+- [ ] Aguardar build das imagens Docker
+- [ ] Verificar deploy dos manifests K8s
+- [ ] Confirmar instalação Prometheus/Grafana
+- [ ] Aguardar pods prontos
+- [ ] Verificar testes automáticos ✅
+
+### Verificações Finais
+- [ ] Gateway acessível
+- [ ] Frontend funcionando (criar playlist)
+- [ ] Grafana acessível e com dashboard
+- [ ] Prometheus coletando métricas
+
+## 🛠️ Comandos Rápidos
+
+### Status dos Pods
+```bash
+kubectl get pods -n microservices
+kubectl get pods -n observability
+```
+
+### Logs de um Pod
+```bash
+kubectl logs <nome-do-pod> -n microservices -f
+```
+
+### Executar Comando em Pod
+```bash
+kubectl exec -it <nome-do-pod> -n microservices -- /bin/bash
+```
+
+### Reiniciar Deployment
+```bash
+kubectl rollout restart deployment/<nome> -n microservices
+```
+
+## 🔄 Scripts Auxiliares
+
+### Retomar Observabilidade
+```bash
+./scripts/resume.sh
+```
+
+### Reconstruir Serviços gRPC
+```bash
+./scripts/redeploy-grpc.sh
+```
+
+### Parar Port-Forwards
+```bash
+./scripts/stop-port-forwards.sh
+```
+
+## 🐛 Troubleshooting
+
+### Docker não conecta
+- Abra Docker Desktop
+- Settings → Resources → WSL Integration → Ativar Ubuntu
+- Reinicie WSL: `wsl --shutdown`
+
+### Port-forward parou
+```bash
+./scripts/resume.sh
+```
+
+### Pods não prontos
+```bash
+kubectl describe pod <nome-do-pod> -n microservices
+kubectl logs <nome-do-pod> -n microservices
+```
+
+### Minikube não inicia
+```bash
+minikube delete --profile microservices
+./deploy_and_test.sh
+```
+
 ## 🗂️ Estrutura do Projeto
 
 <details>

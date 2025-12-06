@@ -118,8 +118,13 @@
         </div>
         <div class="modal-body text-center">
           <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-          <p class="mb-3">O download do arquivo foi iniciado automaticamente.</p>
-          <small class="text-muted">Se o download não iniciou, verifique as configurações do seu navegador.</small>
+          <p id="successMessagePrimary" class="mb-2">Download concluído! Iniciando salvamento do arquivo...</p>
+          <p id="successMessageSecondary" class="text-muted mb-3">Caso não comece, clique no botão abaixo.</p>
+          <div>
+            <button id="manualDownloadBtn" type="button" class="btn btn-outline-success d-none">
+              <i class="fas fa-file-download me-2"></i>Baixar arquivo manualmente
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -271,20 +276,34 @@
       const fileId = downloadUrl.split('/file/')[1] || 'video.mp4';
       const finalDownloadUrl = `${GATEWAY_BASE_URL}/${downloadUrl}`;
 
+      // Atualiza mensagens do modal de sucesso e prepara fallback manual
+      const manualBtn = document.getElementById('manualDownloadBtn');
+      const successPrimary = document.getElementById('successMessagePrimary');
+      const successSecondary = document.getElementById('successMessageSecondary');
+      if (manualBtn) {
+        manualBtn.classList.add('d-none');
+        manualBtn.onclick = () => downloadFile(finalDownloadUrl, fileId);
+      }
+      if (successPrimary) successPrimary.textContent = 'Download concluído! Iniciando salvamento do arquivo...';
+      if (successSecondary) successSecondary.textContent = 'Se não começar automaticamente, use o botão abaixo.';
+
       try {
         // 1. TENTA a operação crítica primeiro
         await downloadFile(finalDownloadUrl, fileId);
 
         // 2. SOMENTE SE a linha acima NÃO FALHAR, mostre o sucesso
-        const successEl2 = document.getElementById('successModal');
-        const successModal2 = bootstrap.Modal.getInstance(successEl2) || new bootstrap.Modal(successEl2);
-        try { successModal2.show(); } catch (_) {}
+        // Ajusta mensagens para sucesso efetivo e esconde fallback
+        if (successPrimary) successPrimary.textContent = 'Arquivo salvo com sucesso.';
+        if (successSecondary) successSecondary.textContent = 'Você pode fechar esta janela.';
+        if (manualBtn) manualBtn.classList.add('d-none');
 
       } catch (error) {
         // 3. Se a operação crítica falhar (dentro de downloadFile), mostre o erro
         console.error("Falha durante a etapa final de download:", error);
-        // A função downloadFile já chama showError, mas podemos garantir aqui também.
-        showModalError(error.message || "Não foi possível iniciar o download do arquivo.");
+        // Em caso de falha na tentativa automática, mostra fallback manual no modal de sucesso
+        if (successPrimary) successPrimary.textContent = 'Download concluído, mas não foi possível salvar automaticamente.';
+        if (successSecondary) successSecondary.textContent = 'Clique no botão abaixo para baixar manualmente.';
+        if (manualBtn) manualBtn.classList.remove('d-none');
       } finally {
         // 4. Independentemente de sucesso ou falha, resete o botão
         resetDownloadButton();

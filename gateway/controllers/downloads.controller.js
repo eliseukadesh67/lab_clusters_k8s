@@ -1,10 +1,8 @@
 import gRpcDownloadClient from "../clients/downloadClient/grpc.client.js";
-import restDownloadClient from "../clients/downloadClient/rest.client.js"
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
 
-// const getClient = (req) => (req.headers['x-communication-protocol'] === 'grpc' ? gRpcDownloadClient : restDownloadClient);
 const getClient = (req) => gRpcDownloadClient;
 
 const TEMP_DOWNLOAD_DIR = path.join(process.cwd(), "temp_downloads");
@@ -22,7 +20,6 @@ const getVideoMetadata = async (req, res, next) => {
         .status(400)
         .json({ error: 'O parâmetro "url" é obrigatório.' });
     }
-    // Nota: O cliente REST não é usado nesta implementação, mas a lógica é mantida por flexibilidade
     const result = await client.getMetadata({ url });
     res.status(200).json(result);
   } catch (error) {

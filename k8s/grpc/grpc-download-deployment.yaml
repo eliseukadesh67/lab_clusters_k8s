@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
       - name: grpc-download-service-container
-        image: kadesh67/grpc-download-service:latest
-        imagePullPolicy: Always
+        image: grpc-download-service:latest
+        imagePullPolicy: Never
         ports:
         - name: grpc
           containerPort: 50052

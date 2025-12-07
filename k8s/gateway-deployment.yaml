@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
       - name: gateway-service-container
-        image: kadesh67/gateway-service:latest
-        imagePullPolicy: Always
+        image: gateway-service:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 3000
         env: # Injeta as URLs dos serviços internos como variáveis de ambiente
@@ -24,10 +24,6 @@ spec:
           value: "grpc-playlist-service:50051" # K8s DNS: <service-name>:<port>
         - name: DOWNLOADS_GRPC_URL
           value: "grpc-download-service:50052"
-        - name: PLAYLISTS_REST_URL
-          value: "rest-playlist-service:5001"
-        - name: DOWNLOADS_REST_URL
-          value: "rest-download-service:5002"
         - name: PORT
           value: "3000"
         - name: PROTO_DIR

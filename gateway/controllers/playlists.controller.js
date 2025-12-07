@@ -1,8 +1,7 @@
 import gRpcPlaylistClient from '../clients/playlistClient/grpc.client.js';
-import restPlaylistClient from '../clients/playlistClient/rest.client.js';
 
-// Função auxiliar para escolher o cliente com base no header
-const getClient = (req) => (req.headers['x-communication-protocol'] === 'grpc' ? gRpcPlaylistClient : restPlaylistClient);
+// Função auxiliar para escolher o cliente
+const getClient = (req) => gRpcPlaylistClient;
 
 const createPlaylist = async (req, res, next) => {
     try {

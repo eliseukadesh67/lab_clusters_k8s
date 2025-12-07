@@ -32,11 +32,12 @@
 
     <!-- Success Card -->
     <div id="successCard" class="card my-4 d-none border-success">
-        <div class="card-body text-center">
+        <div class="card-body text-center position-relative">
+            <button id="closeSuccessBtn" type="button" class="btn-close position-absolute top-0 end-0 m-2" aria-label="Close"></button>
             <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
             <h5 class="card-title text-success">Download Concluído!</h5>
-            <p class="card-text text-muted">O download do arquivo foi iniciado automaticamente.</p>
-            <small class="text-muted">Se o download não iniciou, verifique as configurações do seu navegador.</small>
+            <p class="card-text text-muted">O vídeo foi processado e baixado com sucesso.</p>
+            <small class="text-muted d-block mb-1">Verifique a pasta de Downloads do seu navegador.</small>
         </div>
     </div>
 
@@ -77,6 +78,9 @@
       progressBar.setAttribute('aria-valuenow', 0);
       progressBar.textContent = '0%';
       document.getElementById('progressText').textContent = 'Iniciando download...';
+      // Limpa o campo de URL para o estado inicial (placeholder padrão)
+      const videoUrlInput = document.getElementById('videoUrl');
+      videoUrlInput.value = '';
       document.getElementById('videoUrl').disabled = false;
       resetButton();
       if (eventSource) {
@@ -140,20 +144,45 @@
 
   // --- Função chamada ao receber o evento 'completed' via SSE ---
   async function downloadCompleted(downloadUrl, fileId) {
-      
       console.log('Backend concluiu. Iniciando download no cliente do fileId:', fileId);
-      document.getElementById('progressCard').classList.add('d-none');
-      document.getElementById('successCard').classList.remove('d-none');
-
-      const finalDownloadUrl = `${GATEWAY_BASE_URL}/${downloadUrl}`;
-
-      await downloadFile(finalDownloadUrl, fileId);
       
+      // Marca como completo ANTES de fechar a conexão SSE
+      downloadIsComplete = true;
+      
+      // Fecha a conexão SSE imediatamente
       if (eventSource) {
           eventSource.close();
           eventSource = null;
       }
+      
+      // Atualiza a UI para mostrar 100%
+      const progressBar = document.getElementById('progressBar');
+      progressBar.style.width = '100%';
+      progressBar.setAttribute('aria-valuenow', 100);
+      progressBar.textContent = '100%';
+      
+    // Oculta o card de progresso e mostra o de sucesso
+    document.getElementById('progressCard').classList.add('d-none');
+    document.getElementById('successCard').classList.remove('d-none');
+      
+      // Reseta o botão
+      resetButton();
+
+      // Baixa o arquivo
+      const finalDownloadUrl = `${GATEWAY_BASE_URL}/${downloadUrl}`;
+      await downloadFile(finalDownloadUrl, fileId);
   }
+
+    // Botão para fechar card de sucesso e voltar ao estado de novo download
+    (function attachCloseSuccessHandler(){
+        const closeBtn = document.getElementById('closeSuccessBtn');
+        if (!closeBtn) return;
+        closeBtn.addEventListener('click', () => {
+            document.getElementById('successCard').classList.add('d-none');
+            if (eventSource) { try { eventSource.close(); } catch (_) {} eventSource = null; }
+            resetForm();
+        });
+    })();
 
   // --- Event Listener do Formulário ---
   document.getElementById('downloadForm').addEventListener('submit', function(e) {

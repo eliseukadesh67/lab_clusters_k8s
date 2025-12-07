@@ -47,7 +47,7 @@ app.get('/playlists/:id', async (req, res) => {
     try {
         const playlistId = req.params.id
         const response = await axios.get(`${API_URL}/api/playlists/${playlistId}`)
-        res.render('playlist-detalhe', { playlist: response.data.data });
+        res.render('playlist-detalhe', { playlist: response.data.data, gatewayBaseUrl: API_URL });
     } catch (error) {
         console.error(error);
         res.redirect('/playlists');
@@ -113,12 +113,26 @@ app.post('/playlists/videos/:id', async (req, res) => {
 
 // TODO: GET /downloads/video/:id
 app.post('/downloads/video/:id', async (req, res) => {
-    // ...
+    try {
+        const { id } = req.params;
+        // Redirecionar para o gateway para iniciar o download
+        res.redirect(`${API_URL}/api/downloads?url=${encodeURIComponent(id)}`);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erro ao iniciar download' });
+    }
 });
 
 // TODO: GET /downloads/playlist/:id 
 app.post('/downloads/playlist/:id', async (req, res) => {
-    // ...
+    try {
+        const { id } = req.params;
+        // Por enquanto, apenas redirecionar - implementação futura
+        res.redirect(`${API_URL}/api/playlists/${id}`);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erro ao baixar playlist' });
+    }
 });
 
 async function downloadCompleted(fileId) {

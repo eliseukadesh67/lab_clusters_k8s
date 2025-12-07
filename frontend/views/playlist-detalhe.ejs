@@ -118,8 +118,13 @@
         </div>
         <div class="modal-body text-center">
           <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-          <p class="mb-3">O download do arquivo foi iniciado automaticamente.</p>
-          <small class="text-muted">Se o download não iniciou, verifique as configurações do seu navegador.</small>
+          <p id="successMessagePrimary" class="mb-2">Download concluído! Iniciando salvamento do arquivo...</p>
+          <p id="successMessageSecondary" class="text-muted mb-3">Caso não comece, clique no botão abaixo.</p>
+          <div>
+            <button id="manualDownloadBtn" type="button" class="btn btn-outline-success d-none">
+              <i class="fas fa-file-download me-2"></i>Baixar arquivo manualmente
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -147,7 +152,7 @@
   </div>
 
   <script>
-    const GATEWAY_BASE_URL = 'http://192.168.49.2';
+    const GATEWAY_BASE_URL = '<%= gatewayBaseUrl %>';
     let currentEventSource = null;
     let currentVideoId = null;
     let downloadIsComplete = false;
@@ -258,29 +263,47 @@
         currentEventSource = null;
       }
 
-      // Hide progress modal
-      bootstrap.Modal.getInstance(document.getElementById('downloadModal')).hide();
+      // Hide progress modal (com segurança)
+      const progressEl = document.getElementById('downloadModal');
+      const progressInst = bootstrap.Modal.getInstance(progressEl) || new bootstrap.Modal(progressEl);
+      try { progressInst.hide(); } catch (_) {}
 
       // Show success modal
-      const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-      successModal.show();
+      const successEl = document.getElementById('successModal');
+      const successModal = bootstrap.Modal.getInstance(successEl) || new bootstrap.Modal(successEl);
+      try { successModal.show(); } catch (_) {}
 
       const fileId = downloadUrl.split('/file/')[1] || 'video.mp4';
       const finalDownloadUrl = `${GATEWAY_BASE_URL}/${downloadUrl}`;
+
+      // Atualiza mensagens do modal de sucesso e prepara fallback manual
+      const manualBtn = document.getElementById('manualDownloadBtn');
+      const successPrimary = document.getElementById('successMessagePrimary');
+      const successSecondary = document.getElementById('successMessageSecondary');
+      if (manualBtn) {
+        manualBtn.classList.add('d-none');
+        manualBtn.onclick = () => downloadFile(finalDownloadUrl, fileId);
+      }
+      if (successPrimary) successPrimary.textContent = 'Download concluído! Iniciando salvamento do arquivo...';
+      if (successSecondary) successSecondary.textContent = 'Se não começar automaticamente, use o botão abaixo.';
 
       try {
         // 1. TENTA a operação crítica primeiro
         await downloadFile(finalDownloadUrl, fileId);
 
         // 2. SOMENTE SE a linha acima NÃO FALHAR, mostre o sucesso
-        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-        successModal.show();
+        // Ajusta mensagens para sucesso efetivo e esconde fallback
+        if (successPrimary) successPrimary.textContent = 'Arquivo salvo com sucesso.';
+        if (successSecondary) successSecondary.textContent = 'Você pode fechar esta janela.';
+        if (manualBtn) manualBtn.classList.add('d-none');
 
       } catch (error) {
         // 3. Se a operação crítica falhar (dentro de downloadFile), mostre o erro
         console.error("Falha durante a etapa final de download:", error);
-        // A função downloadFile já chama showError, mas podemos garantir aqui também.
-        showModalError(error.message || "Não foi possível iniciar o download do arquivo.");
+        // Em caso de falha na tentativa automática, mostra fallback manual no modal de sucesso
+        if (successPrimary) successPrimary.textContent = 'Download concluído, mas não foi possível salvar automaticamente.';
+        if (successSecondary) successSecondary.textContent = 'Clique no botão abaixo para baixar manualmente.';
+        if (manualBtn) manualBtn.classList.remove('d-none');
       } finally {
         // 4. Independentemente de sucesso ou falha, resete o botão
         resetDownloadButton();
@@ -293,13 +316,16 @@
         currentEventSource = null;
       }
 
-      // Hide progress modal
-      bootstrap.Modal.getInstance(document.getElementById('downloadModal')).hide();
+      // Hide progress modal com segurança
+      const progEl = document.getElementById('downloadModal');
+      const progInst = bootstrap.Modal.getInstance(progEl) || new bootstrap.Modal(progEl);
+      try { progInst.hide(); } catch (_) {}
 
       // Show error modal
       document.getElementById('modalErrorMessage').textContent = message;
-      const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-      errorModal.show();
+      const errorEl = document.getElementById('errorModal');
+      const errorModal = bootstrap.Modal.getInstance(errorEl) || new bootstrap.Modal(errorEl);
+      try { errorModal.show(); } catch (_) {}
 
       // Reset button
       resetDownloadButton();
@@ -309,12 +335,22 @@
       const modals = ['downloadModal', 'successModal', 'errorModal'];
       modals.forEach(modalId => {
         const modalElement = document.getElementById(modalId);
-        const modalInstance = bootstrap.Modal.getInstance(modalElement);
-        if (modalInstance) {
-          modalInstance.hide();
-        }
+        if (!modalElement) return;
+        const modalInstance = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+        try { modalInstance.hide(); } catch (_) {}
       });
     }
+
+    // Garantir que fechar no "X" não deixe estados quebrados
+    ['downloadModal','successModal','errorModal'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('hidden.bs.modal', () => {
+        // Reabilita botão se necessário e encerra SSE
+        if (currentEventSource) { try { currentEventSource.close(); } catch (_) {} currentEventSource = null; }
+        resetDownloadButton();
+      });
+    });
 
     function resetProgress() {
       const progressBar = document.getElementById('modalProgressBar');
